@@ -1,0 +1,82 @@
+<div class="min-h-screen bg-slate-50">
+  <app-nav-bar [currentScreen]="'home'" />
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900 mb-2">Welcome back, Ahmed! 👋</h1>
+      <p class="text-slate-600">Here's what's happening in your community today</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      @for (stat of stats; track stat.label) {
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-slate-600 text-sm mb-1">{{ stat.label }}</p>
+              <p class="text-2xl font-bold text-slate-900">{{ stat.value }}</p>
+            </div>
+            <div [class]="'w-12 h-12 rounded-xl flex items-center justify-center text-2xl ' + stat.color">
+              {{ stat.icon }}
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-slate-900">Available Requests</h2>
+        </div>
+
+        <div class="space-y-4">
+          @for (request of nearbyRequests; track request.id) {
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-lg transition-all cursor-pointer"
+                 (click)="navigate('details')">
+              <div class="flex items-start gap-4">
+                <app-avatar [fallback]="request.avatar" className="w-12 h-12" />
+
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-2">
+                    <h3 class="text-lg font-medium text-slate-900">{{ request.title }}</h3>
+                    @if (request.urgent) {
+                      <app-badge className="bg-red-100 text-red-700 border-0">Urgent</app-badge>
+                    }
+                  </div>
+                  <p class="text-slate-600 mb-3">{{ request.user }}</p>
+
+                  <div class="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
+                    <span>📍 {{ request.distance }} away</span>
+                    <span class="text-green-600">💵 {{ request.budget }}</span>
+                    <span>⭐ {{ request.rating }}</span>
+                    <span>🕐 {{ request.time }}</span>
+                  </div>
+
+                  <app-button>View Details</app-button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Quick Actions</h2>
+        <div class="space-y-3">
+          <app-button className="w-full justify-start py-4 rounded-xl" (clicked)="navigate('create')">
+            <div class="text-left w-full">
+              <p class="font-medium mb-1">Post New Request</p>
+              <p class="text-xs opacity-70">Get help from your community</p>
+            </div>
+          </app-button>
+          <app-button variant="outline" className="w-full justify-start py-4 rounded-xl border-2" (clicked)="navigate('profile')">
+            <div class="text-left w-full">
+              <p class="font-medium mb-1 text-slate-900">Edit Profile</p>
+              <p class="text-xs text-slate-600">Update your information</p>
+            </div>
+          </app-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,144 @@
+<div class="min-h-screen bg-slate-50">
+  <app-nav-bar [currentScreen]="'create'" />
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900 mb-2">Create Service Request</h1>
+      <p class="text-slate-600">Fill in the details to post your request</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm mb-6">
+      <div class="flex items-center justify-between relative">
+        <div class="absolute top-6 left-0 right-0 h-1 bg-slate-200 -z-10">
+          <div class="h-full bg-blue-600 transition-all" [style.width.%]="progressWidth()"></div>
+        </div>
+
+        @for (step of steps; track step.number) {
+          <div class="flex flex-col items-center">
+            <div [ngClass]="{
+              'bg-blue-600 text-white shadow-lg': currentStep() >= step.number,
+              'bg-white border-2 border-slate-300 text-slate-400': currentStep() < step.number
+            }" class="w-12 h-12 rounded-full flex items-center justify-center transition-all z-10 font-medium">
+              @if (currentStep() > step.number) {
+                <span>✓</span>
+              } @else {
+                <span>{{ step.number }}</span>
+              }
+            </div>
+            <p [ngClass]="currentStep() >= step.number ? 'text-slate-900' : 'text-slate-500'"
+               class="mt-2 text-sm font-medium">
+              {{ step.title }}
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+      <form [formGroup]="requestForm">
+        @if (currentStep() === 1) {
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Request Title *</label>
+              <input formControlName="title"
+                     placeholder="e.g., Need help moving furniture"
+                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Category *</label>
+              <select formControlName="category"
+                      class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Select a category</option>
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+
+        @if (currentStep() === 2) {
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Description *</label>
+              <textarea formControlName="description"
+                        rows="6"
+                        placeholder="Describe what help you need in detail..."
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Budget *</label>
+              <input formControlName="budget"
+                     placeholder="e.g., 25 or 30/hr"
+                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        }
+
+        @if (currentStep() === 3) {
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Location *</label>
+              <input formControlName="location"
+                     placeholder="Enter address or area"
+                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-900 mb-2">Date *</label>
+                <input formControlName="date" type="date"
+                       class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-900 mb-2">Time *</label>
+                <input formControlName="time" type="time"
+                       class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (currentStep() === 4) {
+          <div class="space-y-4">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">✓</div>
+              <h2 class="text-2xl font-bold text-slate-900 mb-2">Review Your Request</h2>
+              <p class="text-slate-600">Make sure all details are correct</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-sm text-slate-600 mb-1">Title</p>
+              <p class="text-slate-900">{{ requestForm.value.title || 'Not set' }}</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-sm text-slate-600 mb-1">Category</p>
+              <p class="text-slate-900">{{ requestForm.value.category || 'Not set' }}</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-sm text-slate-600 mb-1">Budget</p>
+              <p class="text-slate-900">${{ requestForm.value.budget || 'Not set' }}</p>
+            </div>
+          </div>
+        }
+
+        <div class="flex justify-between mt-8 pt-6 border-t border-slate-200">
+          <app-button
+            variant="outline"
+            className="rounded-xl"
+            (clicked)="currentStep() === 1 ? navigate('home') : prevStep()">
+            {{ currentStep() === 1 ? 'Cancel' : 'Back' }}
+          </app-button>
+          <app-button className="rounded-xl min-w-[120px]" (clicked)="nextStep()">
+            {{ currentStep() === 4 ? 'Post Request' : 'Next' }}
+          </app-button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

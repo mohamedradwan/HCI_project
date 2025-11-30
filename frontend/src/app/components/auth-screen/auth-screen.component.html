@@ -1,0 +1,116 @@
+<div class="min-h-screen flex">
+  <div class="flex-1 flex items-center justify-center p-8 bg-white">
+    <div class="w-full max-w-md">
+      <app-button variant="ghost" className="mb-6" (clicked)="navigateBack()">
+        ← Back to Home
+      </app-button>
+
+      <div class="flex items-center gap-2 mb-8">
+        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center">
+          <span class="text-white font-bold">5</span>
+        </div>
+        <span class="text-2xl font-medium text-slate-900">5alasly</span>
+      </div>
+
+      <h1 class="text-3xl font-bold text-slate-900 mb-2">
+        {{ isLogin() ? 'Welcome back' : 'Create your account' }}
+      </h1>
+      <p class="text-slate-600 mb-8">
+        {{ isLogin() ? 'Enter your credentials to access your account' : 'Join our community of helpers and seekers' }}
+      </p>
+
+      <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        @if (!isLogin()) {
+          <div>
+            <label class="block text-sm font-medium text-slate-900 mb-1.5">Full Name</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">👤</span>
+              <input
+                formControlName="name"
+                type="text"
+                placeholder="Enter your full name"
+                class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-900 mb-1.5">Phone Number</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">📱</span>
+              <input
+                formControlName="phone"
+                type="tel"
+                placeholder="Enter your phone number"
+                class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        }
+
+        <div>
+          <label class="block text-sm font-medium text-slate-900 mb-1.5">Email</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">✉️</span>
+            <input
+              formControlName="email"
+              type="email"
+              placeholder="Enter your email"
+              class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-900 mb-1.5">Password</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔒</span>
+            <input
+              formControlName="password"
+              type="password"
+              placeholder="Enter your password"
+              class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <app-button
+          type="submit"
+          className="w-full h-12 rounded-xl"
+          [disabled]="!authForm.valid">
+          {{ isLogin() ? 'Sign In' : 'Create Account' }}
+        </app-button>
+      </form>
+
+      <p class="text-center mt-6 text-slate-600">
+        {{ isLogin() ? "Don't have an account?" : 'Already have an account?' }}
+        <button (click)="toggleMode()" class="text-blue-600 hover:text-blue-700 font-medium ml-1">
+          {{ isLogin() ? 'Sign up' : 'Sign in' }}
+        </button>
+      </p>
+    </div>
+  </div>
+
+  <div class="hidden lg:flex flex-1 bg-gradient-to-br from-blue-500 via-blue-600 to-orange-500 items-center justify-center p-12">
+    <div class="text-white text-center max-w-md">
+      <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl">
+        👥
+      </div>
+      <h2 class="text-3xl font-bold mb-4">Join our community</h2>
+      <p class="text-blue-100 text-lg">
+        Connect with trusted local helpers and get your tasks done quickly and safely.
+      </p>
+
+      <div class="mt-12 grid grid-cols-3 gap-4">
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div class="text-2xl font-bold mb-1">10k+</div>
+          <div class="text-sm text-blue-100">Active Users</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div class="text-2xl font-bold mb-1">25k+</div>
+          <div class="text-sm text-blue-100">Tasks Done</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+          <div class="text-2xl font-bold mb-1">4.8★</div>
+          <div class="text-sm text-blue-100">Avg Rating</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

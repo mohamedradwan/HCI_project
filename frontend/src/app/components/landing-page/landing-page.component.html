@@ -1,0 +1,119 @@
+<div class="min-h-screen">
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold">5</span>
+          </div>
+          <span class="text-slate-900 text-xl font-medium">5alasly</span>
+        </div>
+        <div class="flex items-center gap-3">
+          @if (isLoggedIn()) {
+            <app-button (clicked)="navigate('home')">Dashboard</app-button>
+          } @else {
+            <app-button variant="ghost" (clicked)="navigate('auth')">Login</app-button>
+            <app-button (clicked)="navigate('auth')">Sign Up</app-button>
+          }
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="bg-gradient-to-br from-blue-50 via-white to-orange-50 py-20 px-4">
+    <div class="max-w-6xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-6 border border-slate-200">
+        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        <span class="text-slate-600 text-sm">Join 10,000+ active users</span>
+      </div>
+
+      <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4 max-w-3xl mx-auto">
+        Your local helper, one click away
+      </h1>
+
+      <p class="text-slate-600 mb-8 max-w-2xl mx-auto text-lg">
+        Need help with something? Post a request and connect with trusted local service providers in your community.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4">
+        <app-button
+          size="lg"
+          className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg"
+          (clicked)="navigate(isLoggedIn() ? 'create' : 'auth')">
+          Post a Request
+        </app-button>
+        <app-button
+          size="lg"
+          variant="outline"
+          className="rounded-xl border-2"
+          (clicked)="navigate(isLoggedIn() ? 'home' : 'auth')">
+          Browse Tasks
+        </app-button>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-3">Popular Service Categories</h2>
+        <p class="text-slate-600">Find the help you need or offer your skills</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (category of categories; track category.name) {
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all cursor-pointer group">
+            <div [class]="'w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-3xl group-hover:scale-110 transition-transform ' + category.color">
+              {{ category.icon }}
+            </div>
+            <h3 class="text-lg font-medium text-slate-900 mb-2">{{ category.name }}</h3>
+            <p class="text-slate-500 text-sm">{{ category.count }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 px-4 bg-white">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-3">Why Choose 5alasly?</h2>
+        <p class="text-slate-600">Join our trusted community of helpers and seekers</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        @for (feature of features; track feature.title) {
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-4xl">
+              {{ feature.icon }}
+            </div>
+            <h3 class="text-lg font-medium text-slate-900 mb-2">{{ feature.title }}</h3>
+            <p class="text-slate-600">{{ feature.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 px-4 bg-gradient-to-br from-blue-600 to-orange-500">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-4xl font-bold text-white mb-4">Ready to get started?</h2>
+      <p class="text-blue-50 mb-8 text-lg">
+        Join thousands of users who are already getting and giving help in their community
+      </p>
+      <app-button
+        size="lg"
+        variant="secondary"
+        className="rounded-xl shadow-lg"
+        (clicked)="navigate('auth')">
+        Get Started Free
+      </app-button>
+    </div>
+  </section>
+
+  <footer class="bg-slate-900 text-slate-300 py-12 px-4">
+    <div class="max-w-7xl mx-auto text-center text-sm">
+      <p>© 2025 5alasly. All rights reserved.</p>
+    </div>
+  </footer>
+</div>
