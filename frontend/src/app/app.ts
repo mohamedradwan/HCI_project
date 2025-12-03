@@ -7,7 +7,7 @@ import { NavBarComponent } from './components/nav-bar/nav-bar.component';
   standalone: true,
   imports: [RouterOutlet, NavBarComponent],
   template: `
-    <app-nav-bar [(currentScreen)]="currentScreen"></app-nav-bar>
+<!--    <app-nav-bar [(currentScreen)]="currentScreen"></app-nav-bar>-->
 
     <router-outlet (activate)="onActivate()"></router-outlet>
   `
@@ -31,4 +31,7 @@ export class AppComponent {
       }
     });
   }
+}
+
+export class App {
 }

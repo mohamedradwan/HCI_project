@@ -4,7 +4,7 @@ import { NgClass, NgIf } from '@angular/common';
 @Component({
   selector: 'app-avatar',
   standalone: true,
-  imports: [NgClass, NgIf],
+  imports: [NgClass],
   template: `
     <div [ngClass]="'relative inline-block ' + className()">
       @if (src() && !error()) {
