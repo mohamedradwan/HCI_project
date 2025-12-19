@@ -7,6 +7,7 @@
       <p class="text-slate-600">Fill in the details to post your request</p>
     </div>
 
+    <!-- Progress Bar -->
     <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm mb-6">
       <div class="flex items-center justify-between relative">
         <div class="absolute top-6 left-0 right-0 h-1 bg-slate-200 -z-10">
@@ -34,8 +35,17 @@
       </div>
     </div>
 
+    <!-- Form -->
     <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {{ errorMessage() }}
+        </div>
+      }
+
       <form [formGroup]="requestForm">
+        <!-- Step 1: Basic Info -->
         @if (currentStep() === 1) {
           <div class="space-y-6">
             <div>
@@ -58,6 +68,7 @@
           </div>
         }
 
+        <!-- Step 2: Details -->
         @if (currentStep() === 2) {
           <div class="space-y-6">
             <div>
@@ -72,12 +83,18 @@
             <div>
               <label class="block text-sm font-medium text-slate-900 mb-2">Budget *</label>
               <input formControlName="budget"
-                     placeholder="e.g., 25 or 30/hr"
+                     placeholder="e.g., $25 or $30/hr"
                      class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" formControlName="urgent" id="urgent" class="w-4 h-4" />
+              <label for="urgent" class="text-sm text-slate-700">Mark as urgent</label>
             </div>
           </div>
         }
 
+        <!-- Step 3: Location & Time -->
         @if (currentStep() === 3) {
           <div class="space-y-6">
             <div>
@@ -102,6 +119,7 @@
           </div>
         }
 
+        <!-- Step 4: Review -->
         @if (currentStep() === 4) {
           <div class="space-y-4">
             <div class="text-center mb-6">
@@ -122,20 +140,30 @@
 
             <div class="bg-slate-50 rounded-xl p-4">
               <p class="text-sm text-slate-600 mb-1">Budget</p>
-              <p class="text-slate-900">${{ requestForm.value.budget || 'Not set' }}</p>
+              <p class="text-slate-900">{{ requestForm.value.budget || 'Not set' }}</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4">
+              <p class="text-sm text-slate-600 mb-1">Location</p>
+              <p class="text-slate-900">{{ requestForm.value.location || 'Not set' }}</p>
             </div>
           </div>
         }
 
+        <!-- Navigation Buttons -->
         <div class="flex justify-between mt-8 pt-6 border-t border-slate-200">
           <app-button
             variant="outline"
             className="rounded-xl"
+            [disabled]="isSubmitting()"
             (clicked)="currentStep() === 1 ? navigate('home') : prevStep()">
             {{ currentStep() === 1 ? 'Cancel' : 'Back' }}
           </app-button>
-          <app-button className="rounded-xl min-w-[120px]" (clicked)="nextStep()">
-            {{ currentStep() === 4 ? 'Post Request' : 'Next' }}
+          <app-button
+            className="rounded-xl min-w-[120px]"
+            [disabled]="isSubmitting()"
+            (clicked)="nextStep()">
+            {{ isSubmitting() ? 'Posting...' : (currentStep() === 4 ? 'Post Request' : 'Next') }}
           </app-button>
         </div>
       </form>

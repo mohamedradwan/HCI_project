@@ -1,0 +1,154 @@
+<div class="min-h-screen bg-slate-50">
+    <app-nav-bar [currentScreen]="'profile'" />
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Loading State -->
+        @if (isLoading()) {
+        <div class="bg-white rounded-2xl p-12 border border-slate-200 text-center">
+            <p class="text-slate-500">Loading profile...</p>
+        </div>
+        }
+
+        <!-- Error State -->
+        @if (error() && !isLoading()) {
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+            {{ error() }}
+        </div>
+        }
+
+        <!-- Profile Content -->
+        @if (!isLoading() && user()) {
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+            <!-- Header Banner -->
+            <div class="h-32 bg-gradient-to-br from-blue-500 to-orange-500"></div>
+
+            <div class="px-8 pb-8">
+                <!-- Avatar and Actions -->
+                <div class="flex justify-between items-start -mt-16 mb-4">
+                    <app-avatar [fallback]="getInitials()"
+                        className="w-32 h-32 border-4 border-white shadow-lg text-3xl" />
+                    <div class="mt-20 flex gap-3">
+                        <app-button variant="outline" className="rounded-xl" (clicked)="navigate('create')">
+                            Create Request
+                        </app-button>
+                        <app-button variant="outline" className="rounded-xl text-red-600 border-red-200 hover:bg-red-50"
+                            (clicked)="logout()">
+                            Logout
+                        </app-button>
+                    </div>
+                </div>
+
+                <!-- User Info -->
+                <div class="flex items-center gap-2 mb-2">
+                    <h1 class="text-3xl font-bold text-slate-900">{{ user()?.name }}</h1>
+                    @if (user()?.verified) {
+                    <app-badge variant="secondary" className="gap-1">✓ Verified</app-badge>
+                    }
+                </div>
+                <p class="text-slate-600 mb-2">{{ user()?.email }}</p>
+                <p class="text-slate-600 mb-4">
+                    ⭐ {{ user()?.rating?.toFixed(1) || '0.0' }} ({{ user()?.totalReviews || 0 }} reviews)
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        @if (stats()) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Completed Tasks</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.completedTasks || 0 }}</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-green-100 text-green-600">
+                        ✅
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">This Month</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.thisMonth || 0 }}</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-blue-100 text-blue-600">
+                        📈
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Active Clients</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.activeClients || 0 }}</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-orange-100 text-orange-600">
+                        👥
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-slate-600 text-sm mb-1">Avg Rating</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.avgRating?.toFixed(1) || '0.0' }}</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-amber-100 text-amber-600">
+                        ⭐
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- User's Requests -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">My Service Requests</h2>
+
+            @if (userRequests().length === 0) {
+            <div class="text-center py-8">
+                <p class="text-slate-500 mb-4">You haven't created any requests yet</p>
+                <app-button (clicked)="navigate('create')">Create Your First Request</app-button>
+            </div>
+            }
+
+            @if (userRequests().length > 0) {
+            <div class="space-y-4">
+                @for (request of userRequests(); track request.id) {
+                <div class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
+                    (click)="viewRequest(request.id!)">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="font-medium text-slate-900">{{ request.title }}</h3>
+                                @if (request.urgent) {
+                                <app-badge className="bg-red-100 text-red-700 border-0">Urgent</app-badge>
+                                }
+                                <app-badge [className]="getStatusColor(request.status || 'OPEN')">
+                                    {{ request.status }}
+                                </app-badge>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-2">{{ request.category }}</p>
+                            <div class="flex gap-4 text-sm text-slate-500">
+                                <span>📍 {{ request.location }}</span>
+                                <span class="text-green-600">💵 {{ request.budget }}</span>
+                                <span>📅 {{ request.date }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        }
+    </div>
+</div>

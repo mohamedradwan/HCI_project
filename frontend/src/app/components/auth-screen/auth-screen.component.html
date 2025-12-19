@@ -19,6 +19,13 @@
         {{ isLogin() ? 'Enter your credentials to access your account' : 'Join our community of helpers and seekers' }}
       </p>
 
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {{ errorMessage() }}
+        </div>
+      }
+
       <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="space-y-4">
         @if (!isLogin()) {
           <div>
@@ -73,8 +80,8 @@
         <app-button
           type="submit"
           className="w-full h-12 rounded-xl"
-          [disabled]="!authForm.valid">
-          {{ isLogin() ? 'Sign In' : 'Create Account' }}
+          [disabled]="!authForm.valid || isLoading()">
+          {{ isLoading() ? 'Please wait...' : (isLogin() ? 'Sign In' : 'Create Account') }}
         </app-button>
       </form>
 

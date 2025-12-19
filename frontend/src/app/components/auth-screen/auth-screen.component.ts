@@ -1,3 +1,4 @@
+// auth-screen.component.ts
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -18,6 +19,8 @@ export class AuthScreenComponent {
 
   isLogin = signal(true);
   authForm: FormGroup;
+  errorMessage = signal('');
+  isLoading = signal(false);
 
   constructor() {
     this.authForm = this.fb.group({
@@ -30,6 +33,8 @@ export class AuthScreenComponent {
 
   toggleMode(): void {
     this.isLogin.set(!this.isLogin());
+    this.errorMessage.set('');
+
     if (!this.isLogin()) {
       this.authForm.get('name')?.setValidators([Validators.required]);
       this.authForm.get('phone')?.setValidators([Validators.required]);
@@ -40,10 +45,45 @@ export class AuthScreenComponent {
     this.authForm.updateValueAndValidity();
   }
 
-  onSubmit(): void {
-    if (this.authForm.valid) {
-      this.authService.login();
+  async onSubmit(): Promise<void> {
+    if (!this.authForm.valid) {
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const formValue = this.authForm.value;
+
+      if (this.isLogin()) {
+        // Login
+        await this.authService.loginWithCredentials(
+          formValue.email,
+          formValue.password
+        );
+      } else {
+        // Register
+        await this.authService.register(
+          formValue.name,
+          formValue.email,
+          formValue.phone,
+          formValue.password
+        );
+      }
+
+      // Navigate to home on success
       this.router.navigate(['/home']);
+
+    } catch (error: any) {
+      console.error('Auth error:', error);
+      this.errorMessage.set(
+        error.error?.message ||
+        error.message ||
+        'An error occurred. Please try again.'
+      );
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
