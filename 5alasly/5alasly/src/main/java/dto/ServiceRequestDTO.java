@@ -26,4 +26,18 @@ public class ServiceRequestDTO {
     private Boolean urgent;
     private String distance;
     private String timeAgo;
+
+    // Request location for distance calculation
+    private Double latitude;
+    private Double longitude;
+
+    // Helper (worker) info
+    private Long helperId;
+    private String helperName;
+    private String helperAvatar;
+    private Double helperRating;
+
+    // Like/dislike counts
+    private Long likeCount;
+    private Long dislikeCount;
 }

@@ -1,6 +1,7 @@
 // user-profile.component.ts
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/components/badge/badge.component';
@@ -19,6 +20,7 @@ interface UserData {
   completedTasks: number;
   verified: boolean;
   avatarUrl?: string;
+  address?: string;
 }
 
 @Component({
@@ -27,10 +29,12 @@ interface UserData {
   imports: [NavBarComponent, AvatarComponent, BadgeComponent, ButtonComponent, NgClass],
   templateUrl: './user-profile.component.html'
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private apiService = inject(ApiService);
   private authService = inject(AuthService);
+  private routeSub: Subscription | undefined;
 
   user = signal<UserData | null>(null);
   stats = signal<UserStatsDTO | null>(null);
@@ -42,22 +46,74 @@ export class UserProfileComponent implements OnInit {
   error = signal('');
   activeTab = signal<'my-requests' | 'in-progress' | 'completed' | 'helped'>('my-requests');
 
+  // Privacy logic
+  currentUser = this.authService.currentUser;
+  isOwnProfile = computed(() => {
+    const user = this.user();
+    const current = this.currentUser();
+    return user && current && user.id === current.userId;
+  });
+
+  getDisplayAddress = computed(() => {
+    const user = this.user();
+    if (!user || !user.address) return null;
+
+    // If it's my profile, show full address
+    if (this.isOwnProfile()) return user.address;
+
+    // If other person, show simplified address (last 2 parts usually City/Area)
+    const parts = user.address.split(',').map(p => p.trim());
+    console.log('Address Parts:', parts); // DEBUG
+    if (parts.length <= 2) return user.address;
+
+    // Return last 2 parts (e.g. "Maadi, Cairo")
+    return parts.slice(-2).join(', ');
+  });
+
   ngOnInit() {
-    this.loadUserData();
+    // Handle both /profile/:id AND /user?id=1
+    this.routeSub = this.route.queryParams.subscribe(queryParams => {
+      const queryId = queryParams['id'];
+      if (queryId) {
+        this.loadUserData(Number(queryId));
+      } else {
+        // If no query param, check path param (e.g. /profile/1)
+        const pathId = this.route.snapshot.params['id'];
+        this.loadUserData(pathId ? Number(pathId) : null);
+      }
+    });
+
+    // Also subscribe to params for direct /profile/:id changes
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.loadUserData(Number(params['id']));
+      }
+    });
   }
 
-  loadUserData() {
+  ngOnDestroy() {
+    if (this.routeSub) {
+      this.routeSub.unsubscribe();
+    }
+  }
+
+  loadUserData(routeProfileId: number | null) {
     const currentUser = this.authService.currentUser();
-    if (!currentUser) {
+    const profileId = routeProfileId || (currentUser ? currentUser.userId : null);
+
+    if (!profileId) {
       this.router.navigate(['/auth']);
       return;
     }
 
+    console.log('Loading profile for User ID:', profileId);
+
     this.isLoading.set(true);
 
     // Load user details
-    this.apiService.getUserById(currentUser.userId).subscribe({
+    this.apiService.getUserById(profileId).subscribe({
       next: (userData) => {
+        console.log('API Returned User Data:', userData); // DEBUG LOG
         this.user.set(userData);
       },
       error: (err) => {
@@ -67,7 +123,7 @@ export class UserProfileComponent implements OnInit {
     });
 
     // Load user stats
-    this.apiService.getUserStats(currentUser.userId).subscribe({
+    this.apiService.getUserStats(profileId).subscribe({
       next: (statsData) => {
         this.stats.set(statsData);
       },
@@ -76,10 +132,14 @@ export class UserProfileComponent implements OnInit {
       }
     });
 
-    // Load user's requests
-    this.apiService.getRequestsByUser(currentUser.userId).subscribe({
+    // Load user's requests (exclude completed/paid - those go in "My Completed")
+    this.apiService.getRequestsByUser(profileId).subscribe({
       next: (requests) => {
-        this.userRequests.set(requests);
+        // Only show OPEN and IN_PROGRESS in "My Requests"
+        const activeRequests = requests.filter(r =>
+          r.status !== 'COMPLETED' && r.status !== 'PAID'
+        );
+        this.userRequests.set(activeRequests);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -88,29 +148,37 @@ export class UserProfileComponent implements OnInit {
       }
     });
 
-    // Load completed requests (user created)
-    this.apiService.getCompletedRequestsByUser(currentUser.userId).subscribe({
-      next: (requests) => {
-        this.completedRequests.set(requests);
-      },
-      error: (err) => console.error('Error loading completed:', err)
-    });
+    // Only load private/my-task info if viewing own profile
+    if (currentUser && currentUser.userId === profileId) {
+      // Load completed requests (user created)
+      this.apiService.getCompletedRequestsByUser(profileId).subscribe({
+        next: (requests) => {
+          this.completedRequests.set(requests);
+        },
+        error: (err) => console.error('Error loading completed:', err)
+      });
 
-    // Load tasks user ACCEPTED as helper (in-progress)
-    this.apiService.getAcceptedTasksByHelper(currentUser.userId).subscribe({
-      next: (requests) => {
-        this.inProgressRequests.set(requests);
-      },
-      error: (err) => console.error('Error loading accepted tasks:', err)
-    });
+      // Load tasks user ACCEPTED as helper (in-progress)
+      this.apiService.getAcceptedTasksByHelper(currentUser.userId).subscribe({
+        next: (requests) => {
+          this.inProgressRequests.set(requests);
+        },
+        error: (err) => console.error('Error loading accepted tasks:', err)
+      });
 
-    // Load tasks user COMPLETED as helper
-    this.apiService.getCompletedTasksByHelper(currentUser.userId).subscribe({
-      next: (requests) => {
-        this.helperCompletedTasks.set(requests);
-      },
-      error: (err) => console.error('Error loading helper completed:', err)
-    });
+      // Load tasks user COMPLETED as helper
+      this.apiService.getCompletedTasksByHelper(profileId).subscribe({
+        next: (requests) => {
+          this.helperCompletedTasks.set(requests);
+        },
+        error: (err) => console.error('Error loading helper completed:', err)
+      });
+    } else {
+      // If viewing someone else, clear lists
+      this.completedRequests.set([]);
+      this.inProgressRequests.set([]);
+      this.helperCompletedTasks.set([]);
+    }
   }
 
   setActiveTab(tab: 'my-requests' | 'in-progress' | 'completed' | 'helped') {
@@ -141,7 +209,8 @@ export class UserProfileComponent implements OnInit {
     this.apiService.cancelRequest(requestId).subscribe({
       next: () => {
         // Reload data after cancellation
-        this.loadUserData();
+        const currentUser = this.authService.currentUser();
+        this.loadUserData(currentUser ? currentUser.userId : null);
       },
       error: (err) => console.error('Error cancelling:', err)
     });

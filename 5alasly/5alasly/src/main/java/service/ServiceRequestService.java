@@ -18,6 +18,7 @@ public class ServiceRequestService {
     private final ServiceRequestRepository requestRepository;
     private final UserRepository userRepository;
     private final TaskAssignmentRepository taskAssignmentRepository;
+    private final RequestLikeRepository requestLikeRepository;
 
     @Transactional
     public ServiceRequestDTO createRequest(Long userId, CreateRequestDTO dto) {
@@ -107,6 +108,21 @@ public class ServiceRequestService {
     }
 
     @Transactional
+    public ServiceRequestDTO markAsPaid(Long requestId, String paypalOrderId) {
+        ServiceRequest request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+
+        if (request.getStatus() != ServiceRequest.RequestStatus.COMPLETED) {
+            throw new RuntimeException("Only completed tasks can be marked as paid");
+        }
+
+        request.setStatus(ServiceRequest.RequestStatus.PAID);
+        requestRepository.save(request);
+
+        return convertToDTO(request);
+    }
+
+    @Transactional
     public ServiceRequestDTO cancelRequest(Long requestId, Long userId) {
         ServiceRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
@@ -126,10 +142,13 @@ public class ServiceRequestService {
         return convertToDTO(request);
     }
 
-    // Get requests CREATED BY this user that are completed
+    // Get requests CREATED BY this user that are completed (including PAID)
     public List<ServiceRequestDTO> getCompletedRequestsByUser(Long userId) {
-        return requestRepository.findByUserIdAndStatus(userId, ServiceRequest.RequestStatus.COMPLETED)
-                .stream()
+        List<ServiceRequest> completed = requestRepository.findByUserIdAndStatus(userId,
+                ServiceRequest.RequestStatus.COMPLETED);
+        List<ServiceRequest> paid = requestRepository.findByUserIdAndStatus(userId, ServiceRequest.RequestStatus.PAID);
+        completed.addAll(paid);
+        return completed.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -170,22 +189,53 @@ public class ServiceRequestService {
         long hours = ChronoUnit.HOURS.between(request.getCreatedAt(), LocalDateTime.now());
         String timeAgo = hours < 24 ? hours + " hours ago" : (hours / 24) + " days ago";
 
-        return new ServiceRequestDTO(
-                request.getId(),
-                request.getTitle(),
-                request.getCategory(),
-                request.getDescription(),
-                request.getBudget(),
-                request.getLocation(),
-                request.getDate(),
-                request.getTime(),
-                user.getId(),
-                user.getName(),
-                avatar,
-                user.getRating(),
-                request.getStatus().name(),
-                request.getUrgent(),
-                "1.2 km", // Mock distance
-                timeAgo);
+        // Get helper info if assigned
+        Long helperId = null;
+        String helperName = null;
+        String helperAvatar = null;
+        Double helperRating = null;
+
+        var assignment = taskAssignmentRepository.findByServiceRequestId(request.getId());
+        if (assignment.isPresent()) {
+            User helper = assignment.get().getHelperUser();
+            helperId = helper.getId();
+            helperName = helper.getName();
+            helperAvatar = helper.getAvatarUrl() != null && !helper.getAvatarUrl().isEmpty()
+                    ? helper.getAvatarUrl()
+                    : helper.getName().substring(0, Math.min(2, helper.getName().length())).toUpperCase();
+            helperRating = helper.getRating();
+        }
+
+        // Get like counts
+        Long likeCount = requestLikeRepository.countLikesByRequestId(request.getId());
+        Long dislikeCount = requestLikeRepository.countDislikesByRequestId(request.getId());
+
+        ServiceRequestDTO dto = new ServiceRequestDTO();
+        dto.setId(request.getId());
+        dto.setTitle(request.getTitle());
+        dto.setCategory(request.getCategory());
+        dto.setDescription(request.getDescription());
+        dto.setBudget(request.getBudget());
+        dto.setLocation(request.getLocation());
+        dto.setDate(request.getDate());
+        dto.setTime(request.getTime());
+        dto.setUserId(user.getId());
+        dto.setUserName(user.getName());
+        dto.setUserAvatar(avatar);
+        dto.setUserRating(user.getRating());
+        dto.setStatus(request.getStatus().name());
+        dto.setUrgent(request.getUrgent());
+        dto.setDistance("1.2 km");
+        dto.setTimeAgo(timeAgo);
+        dto.setLatitude(request.getLatitude());
+        dto.setLongitude(request.getLongitude());
+        dto.setHelperId(helperId);
+        dto.setHelperName(helperName);
+        dto.setHelperAvatar(helperAvatar);
+        dto.setHelperRating(helperRating);
+        dto.setLikeCount(likeCount != null ? likeCount : 0L);
+        dto.setDislikeCount(dislikeCount != null ? dislikeCount : 0L);
+
+        return dto;
     }
 }

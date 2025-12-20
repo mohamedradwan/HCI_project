@@ -93,4 +93,76 @@ public class UserController {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
     }
+
+    // DTO for PayPal email update
+    public static class PayPalEmailDTO {
+        private String paypalEmail;
+
+        public String getPaypalEmail() {
+            return paypalEmail;
+        }
+
+        public void setPaypalEmail(String paypalEmail) {
+            this.paypalEmail = paypalEmail;
+        }
+    }
+
+    @PutMapping("/{id}/paypal")
+    public ResponseEntity<?> updatePayPalEmail(
+            @PathVariable Long id,
+            @RequestBody PayPalEmailDTO request) {
+        try {
+            userService.updatePayPalEmail(id, request.getPaypalEmail());
+            return ResponseEntity.ok().body(java.util.Map.of(
+                    "message", "PayPal email updated successfully",
+                    "paypalEmail", request.getPaypalEmail() != null ? request.getPaypalEmail() : ""));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    // DTO for address update
+    public static class AddressDTO {
+        private Double latitude;
+        private Double longitude;
+        private String address;
+
+        public Double getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(Double latitude) {
+            this.latitude = latitude;
+        }
+
+        public Double getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(Double longitude) {
+            this.longitude = longitude;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+    }
+
+    @PutMapping("/{id}/address")
+    public ResponseEntity<?> updateAddress(
+            @PathVariable Long id,
+            @RequestBody AddressDTO request) {
+        try {
+            userService.updateAddress(id, request.getLatitude(), request.getLongitude(), request.getAddress());
+            return ResponseEntity.ok().body(java.util.Map.of(
+                    "message", "Address updated successfully",
+                    "address", request.getAddress() != null ? request.getAddress() : ""));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
 }

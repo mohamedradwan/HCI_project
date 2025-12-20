@@ -105,16 +105,86 @@
             }
           </p>
           }
+
+          <!-- Password Strength Indicator - Only show in signup mode -->
+          @if (!isLogin() && authForm.get('password')?.value) {
+          <div class="mt-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-slate-500 dark:text-slate-400">Password strength</span>
+              <span class="text-xs font-medium" [class.text-red-500]="getPasswordStrength().level === 1"
+                [class.text-yellow-500]="getPasswordStrength().level === 2"
+                [class.text-blue-500]="getPasswordStrength().level === 3"
+                [class.text-green-500]="getPasswordStrength().level === 4">
+                {{ getPasswordStrength().label }}
+              </span>
+            </div>
+            <div class="h-2 bg-slate-200 dark:bg-dark-700 rounded-full overflow-hidden">
+              <div class="h-full transition-all duration-300 rounded-full" [class]="getPasswordStrength().color"
+                [style.width.%]="getPasswordStrength().level * 25">
+              </div>
+            </div>
+          </div>
+          }
         </div>
 
-        <app-button type="submit" className="w-full h-14 text-lg" [disabled]="!authForm.valid || isLoading()">
-          @if (isLoading()) {
-          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-          Processing...
-          } @else {
-          {{ isLogin() ? 'Sign In' : 'Create Account' }}
-          }
-        </app-button>
+        <!-- PayPal Email (Optional) - Only show in signup mode -->
+        @if (!isLogin()) {
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            PayPal Email <span class="text-slate-400 font-normal">(Optional)</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">💳</span>
+            <input formControlName="paypalEmail" type="email" placeholder="e.g. yourpaypal@email.com"
+              class="input pl-12" />
+          </div>
+          <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+            Used to receive payments for tasks you complete. You can add this later in Settings.
+          </p>
+        </div>
+        }
+
+        <!-- Address (Optional) - Only show in signup mode -->
+        @if (!isLogin()) {
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Your Location <span class="text-slate-400 font-normal">(Optional)</span>
+          </label>
+          <div (click)="openAddressModal()"
+            class="relative border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all duration-300" [ngClass]="{
+              'border-slate-300 dark:border-dark-600 hover:border-primary-400': !selectedAddress(),
+              'border-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedAddress()
+            }">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                [ngClass]="selectedAddress() ? 'bg-primary-500 text-white' : 'bg-slate-100 dark:bg-dark-700 text-slate-400'">
+                📍
+              </div>
+              <div class="flex-1 min-w-0">
+                @if (selectedAddress()) {
+                <p class="font-medium text-slate-900 dark:text-white truncate">{{ selectedAddress() }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Tap to change</p>
+                } @else {
+                <p class="text-slate-600 dark:text-slate-400">Tap to select your location</p>
+                <p class="text-xs text-slate-400">Helps show nearby tasks</p>
+                }
+              </div>
+              <span class="text-slate-400">→</span>
+            </div>
+          </div>
+        </div>
+        }
+
+        <div class="pt-4">
+          <app-button type="submit" className="w-full h-14 text-lg" [disabled]="!authForm.valid || isLoading()">
+            @if (isLoading()) {
+            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+            Processing...
+            } @else {
+            {{ isLogin() ? 'Sign In' : 'Create Account' }}
+            }
+          </app-button>
+        </div>
       </form>
 
       <p class="text-center mt-8 text-slate-600 dark:text-slate-400">

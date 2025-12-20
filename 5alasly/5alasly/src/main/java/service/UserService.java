@@ -28,6 +28,10 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setPasswordHash(hashPassword(request.getPassword()));
+        user.setPaypalEmail(request.getPaypalEmail());
+        user.setLatitude(request.getLatitude());
+        user.setLongitude(request.getLongitude());
+        user.setAddress(request.getAddress());
 
         user = userRepository.save(user);
 
@@ -107,6 +111,13 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void updatePayPalEmail(Long userId, String paypalEmail) {
+        User user = getUserById(userId);
+        user.setPaypalEmail(paypalEmail);
+        userRepository.save(user);
+    }
+
     private String hashPassword(String password) {
         // In production, use BCrypt or similar
         return "hashed_" + password;
@@ -120,5 +131,30 @@ public class UserService {
     private Integer calculateThisMonthTasks(Long userId) {
         // Simplified calculation - count tasks from current month
         return 8; // Mock value
+    }
+
+    @Transactional
+    public User updateAddress(Long userId, Double latitude, Double longitude, String address) {
+        User user = getUserById(userId);
+        user.setLatitude(latitude);
+        user.setLongitude(longitude);
+        user.setAddress(address);
+        return userRepository.save(user);
+    }
+
+    // Haversine formula for calculating distance between two lat/lng points
+    public static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        if (lat1 == 0 || lon1 == 0 || lat2 == 0 || lon2 == 0) {
+            return -1; // Invalid coordinates
+        }
+
+        final int R = 6371; // Radius of Earth in km
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
     }
 }

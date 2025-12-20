@@ -20,9 +20,9 @@ export class AuthService {
     }
   }
 
-  register(name: string, email: string, phone: string, password: string) {
+  register(name: string, email: string, phone: string, password: string, paypalEmail?: string, latitude?: number, longitude?: number, address?: string) {
     return new Promise<AuthResponse>((resolve, reject) => {
-      this.apiService.register({ name, email, phone, password }).subscribe({
+      this.apiService.register({ name, email, phone, password, paypalEmail, latitude, longitude, address }).subscribe({
         next: (response) => {
           if (response.userId) {
             this.handleAuthSuccess(response);

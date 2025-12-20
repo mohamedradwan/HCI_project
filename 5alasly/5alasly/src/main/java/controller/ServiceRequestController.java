@@ -112,4 +112,29 @@ public class ServiceRequestController {
         List<ServiceRequestDTO> requests = requestService.getCompletedTasksByHelper(helperId);
         return ResponseEntity.ok(requests);
     }
+
+    @PutMapping("/{id}/paid")
+    public ResponseEntity<?> markAsPaid(
+            @PathVariable Long id,
+            @RequestBody(required = false) PaymentDTO payment) {
+        try {
+            ServiceRequestDTO request = requestService.markAsPaid(id, payment != null ? payment.getOrderId() : null);
+            return ResponseEntity.ok(request);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    // DTO for payment info
+    public static class PaymentDTO {
+        private String orderId;
+
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public void setOrderId(String orderId) {
+            this.orderId = orderId;
+        }
+    }
 }

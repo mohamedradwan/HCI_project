@@ -1,4 +1,5 @@
 package entity;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -50,6 +51,10 @@ public class ServiceRequest {
     @Column(nullable = false)
     private Boolean urgent = false;
 
+    // Location coordinates for distance calculation
+    private Double latitude;
+    private Double longitude;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -71,6 +76,7 @@ public class ServiceRequest {
         OPEN,
         IN_PROGRESS,
         COMPLETED,
+        PAID,
         CANCELLED
     }
 }

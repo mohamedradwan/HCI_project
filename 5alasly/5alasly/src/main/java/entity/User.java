@@ -47,6 +47,19 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String avatarUrl;
 
+    @Column(name = "paypal_email")
+    private String paypalEmail;
+
+    @Column(columnDefinition = "TEXT")
+    private String badges; // Comma-separated badges: "Top Helper,Verified,Fast Responder"
+
+    // User location for distance calculation
+    private Double latitude;
+    private Double longitude;
+
+    @Column(columnDefinition = "TEXT")
+    private String address;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -1,8 +1,8 @@
 <div class="min-h-screen bg-slate-50 dark:bg-dark-950 transition-colors duration-300">
     <app-nav-bar [currentScreen]="'home'" />
 
-    <div class="max-w-4xl mx-auto px-4 py-8">
-        <app-button variant="ghost" (clicked)="navigate('home')" className="mb-6">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <app-button variant="ghost" (clicked)="navigate('home')" className="mb-4">
             ← Back to Dashboard
         </app-button>
 
@@ -32,127 +32,310 @@
         </div>
         }
 
-        <!-- Request Details -->
+        <!-- Two-Column Layout -->
         @if (!isLoading() && request()) {
-        <div class="card overflow-hidden">
-            <!-- Header -->
-            <div class="p-8 border-b border-slate-200 dark:border-dark-700">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-3 flex-wrap">
-                            <h1 class="text-3xl font-bold text-slate-900 dark:text-white">{{ request()?.title }}</h1>
-                            @if (request()?.urgent) {
-                            <app-badge
-                                className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-0">🔥
-                                Urgent</app-badge>
-                            }
-                            <app-badge [className]="getStatusColor(request()?.status || 'OPEN')">
-                                {{ request()?.status }}
-                            </app-badge>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- LEFT COLUMN - Main Content (2/3) -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Title & Status Card -->
+                <div class="card p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3 flex-wrap">
+                                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ request()?.title }}
+                                </h1>
+                                @if (request()?.urgent) {
+                                <app-badge
+                                    className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-0">🔥
+                                    Urgent</app-badge>
+                                }
+                            </div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <app-badge variant="outline">{{ request()?.category }}</app-badge>
+                                <app-badge [className]="getStatusColor(request()?.status || 'OPEN')">
+                                    {{ request()?.status === 'PAID' ? '✅ PAID' : request()?.status }}
+                                </app-badge>
+                            </div>
                         </div>
+
+                        <!-- Like/Dislike & Share Buttons - Hide likes for owner -->
                         <div class="flex items-center gap-2">
-                            <app-badge variant="outline" className="mb-4">{{ request()?.category }}</app-badge>
+                            @if (!isOwner()) {
+                            <button (click)="toggleLike(true)"
+                                [class]="userLiked() === true ? 'text-green-600 bg-green-50 dark:bg-green-900/30' : 'text-slate-400 hover:text-green-600'"
+                                class="p-2 rounded-lg transition-colors flex items-center gap-1">
+                                👍 <span class="text-sm">{{ request()?.likeCount || 0 }}</span>
+                            </button>
+                            <button (click)="toggleLike(false)"
+                                [class]="userLiked() === false ? 'text-red-600 bg-red-50 dark:bg-red-900/30' : 'text-slate-400 hover:text-red-600'"
+                                class="p-2 rounded-lg transition-colors flex items-center gap-1">
+                                👎 <span class="text-sm">{{ request()?.dislikeCount || 0 }}</span>
+                            </button>
+                            } @else {
+                            <span class="text-xs text-slate-400">👍 {{ request()?.likeCount || 0 }} 👎 {{
+                                request()?.dislikeCount || 0 }}</span>
+                            }
                             <button (click)="shareRequest()"
-                                class="px-3 py-1.5 mb-4 rounded-lg border border-slate-200 dark:border-dark-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700 transition-all text-sm flex items-center gap-1">
-                                🔗 Share
+                                class="p-2 rounded-lg text-slate-400 hover:text-primary-600 transition-colors">
+                                🔗
+                            </button>
+                            <button (click)="showReportModal.set(true)"
+                                class="p-2 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                                title="Report this task">
+                                🚩
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">{{ request()?.description }}</p>
-            </div>
-
-            <!-- Details Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-slate-50 dark:bg-dark-900">
-                <div class="bg-white dark:bg-dark-800 rounded-xl p-4 border border-slate-200 dark:border-dark-700">
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Budget</p>
-                    <p class="text-xl font-semibold text-green-600 dark:text-green-400">{{ request()?.budget }}</p>
+                <!-- Description -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">📝 Description</h3>
+                    <p class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{{
+                        request()?.description }}</p>
                 </div>
 
-                <div class="bg-white dark:bg-dark-800 rounded-xl p-4 border border-slate-200 dark:border-dark-700">
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Location</p>
-                    <p class="text-xl font-semibold text-slate-900 dark:text-white">📍 {{ request()?.location }}</p>
-                </div>
-
-                <div class="bg-white dark:bg-dark-800 rounded-xl p-4 border border-slate-200 dark:border-dark-700">
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Date</p>
-                    <p class="text-xl font-semibold text-slate-900 dark:text-white">📅 {{ formatDate(request()?.date ||
-                        '') }}</p>
-                </div>
-
-                <div class="bg-white dark:bg-dark-800 rounded-xl p-4 border border-slate-200 dark:border-dark-700">
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Time</p>
-                    <p class="text-xl font-semibold text-slate-900 dark:text-white">🕐 {{ formatTime(request()?.time ||
-                        '') }}</p>
-                </div>
-            </div>
-
-            <!-- Request Owner (Clickable) -->
-            <div class="p-8 border-t border-slate-200 dark:border-dark-700">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Posted by</h3>
-                <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-dark-800 hover:bg-slate-100 dark:hover:bg-dark-700 transition-colors cursor-pointer"
-                    (click)="viewUserProfile(request()?.userId!)">
-                    <!-- Show image if userAvatar is a data URL or URL, otherwise show initials -->
-                    @if (request()?.userAvatar?.startsWith('data:') || request()?.userAvatar?.startsWith('http')) {
-                    <img [src]="request()?.userAvatar" class="w-14 h-14 rounded-full object-cover" alt="Avatar" />
-                    } @else {
-                    <app-avatar [fallback]="request()?.userAvatar || 'U'" className="w-14 h-14" />
-                    }
-                    <div class="flex-1">
-                        <p class="font-medium text-slate-900 dark:text-white">{{ request()?.userName || 'Anonymous' }}
-                        </p>
-                        <p class="text-slate-600 dark:text-slate-400">⭐ {{ request()?.userRating?.toFixed(1) || 'New
-                            user' }}</p>
+                <!-- Details Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="card p-4">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">💰 Budget</p>
+                        <p class="text-xl font-bold text-green-600 dark:text-green-400">${{ request()?.budget }}</p>
                     </div>
-                    <span class="text-slate-400 dark:text-slate-500">View Profile →</span>
+                    <div class="card p-4">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">📍 Location</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ request()?.location }}</p>
+                    </div>
+                    <div class="card p-4">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">📅 Date</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ formatDate(request()?.date ||
+                            '') }}</p>
+                    </div>
+                    <div class="card p-4">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">🕐 Time</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ formatTime(request()?.time ||
+                            '') }}</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Actions -->
-            <div class="p-8 border-t border-slate-200 dark:border-dark-700 bg-slate-50 dark:bg-dark-900">
-                @if (isOwner()) {
-                @if (request()?.status === 'OPEN') {
-                <p class="text-slate-600 dark:text-slate-400 text-center">Waiting for someone to accept your request</p>
-                } @else if (request()?.status === 'IN_PROGRESS') {
-                <p class="text-blue-600 dark:text-blue-400 text-center font-medium">🔄 Someone is working on your
-                    request</p>
-                } @else {
-                <p class="text-slate-600 dark:text-slate-400 text-center">This is your request</p>
+            <!-- RIGHT COLUMN - Actions & People (1/3) -->
+            <div class="space-y-6">
+
+                <!-- Posted By -->
+                <div class="card p-5">
+                    <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">👤 Posted by</h3>
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-dark-800 hover:bg-slate-100 dark:hover:bg-dark-700 transition-colors cursor-pointer"
+                        (click)="viewUserProfile(request()?.userId!)">
+                        @if (request()?.userAvatar?.startsWith('data:') || request()?.userAvatar?.startsWith('http')) {
+                        <img [src]="request()?.userAvatar" class="w-12 h-12 rounded-full object-cover" alt="Avatar" />
+                        } @else {
+                        <app-avatar [fallback]="request()?.userAvatar || 'U'" className="w-12 h-12" />
+                        }
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-slate-900 dark:text-white truncate">{{ request()?.userName ||
+                                'Anonymous' }}</p>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">⭐ {{ request()?.userRating?.toFixed(1)
+                                || 'New' }}</p>
+                        </div>
+                        <span class="text-slate-400">→</span>
+                    </div>
+                </div>
+
+                <!-- Assigned/Completed By (if applicable) -->
+                @if (request()?.helperId) {
+                <div class="card p-5">
+                    <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">
+                        @if (request()?.status === 'COMPLETED' || request()?.status === 'PAID') {
+                        🔧 Completed by
+                        } @else {
+                        👷 Assigned to
+                        }
+                    </h3>
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors cursor-pointer"
+                        (click)="viewUserProfile(request()?.helperId!)">
+                        @if (request()?.helperAvatar?.startsWith('data:') ||
+                        request()?.helperAvatar?.startsWith('http')) {
+                        <img [src]="request()?.helperAvatar" class="w-12 h-12 rounded-full object-cover" alt="Avatar" />
+                        } @else {
+                        <app-avatar [fallback]="request()?.helperAvatar || 'H'" className="w-12 h-12" />
+                        }
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-slate-900 dark:text-white truncate">{{ request()?.helperName }}
+                            </p>
+                            <p class="text-sm text-green-600 dark:text-green-400">⭐ {{
+                                request()?.helperRating?.toFixed(1) || 'New' }}</p>
+                        </div>
+                        <span class="text-green-500">→</span>
+                    </div>
+                </div>
                 }
-                } @else if (canAccept()) {
-                <div class="flex gap-4">
-                    <app-button className="flex-1 rounded-xl h-12" [disabled]="isAccepting()"
-                        (clicked)="acceptRequest()">
-                        {{ isAccepting() ? 'Accepting...' : '✓ Accept Task' }}
-                    </app-button>
-                    <app-button variant="outline" className="flex-1 rounded-xl h-12">
-                        💬 Contact User
-                    </app-button>
-                </div>
-                } @else if (canComplete()) {
-                <div class="flex gap-4">
-                    <app-button className="flex-1 rounded-xl h-12 bg-gradient-to-r from-green-500 to-emerald-600"
-                        [disabled]="isCompleting()" (clicked)="completeTask()">
-                        {{ isCompleting() ? 'Completing...' : '✅ Mark as Complete' }}
-                    </app-button>
-                    <app-button variant="outline" className="flex-1 rounded-xl h-12">
-                        💬 Contact Owner
-                    </app-button>
-                </div>
-                } @else {
-                <p class="text-slate-600 dark:text-slate-400 text-center">
-                    @if (request()?.status === 'COMPLETED') {
-                    ✅ This task has been completed
-                    } @else if (request()?.status === 'CANCELLED') {
-                    ❌ This task was cancelled
+
+                <!-- Payment Section (for completed tasks, owner only) -->
+                @if (isOwner() && (request()?.status === 'COMPLETED' || request()?.status === 'PAID')) {
+                <div class="card p-5">
+                    <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">💳 Payment</h3>
+                    @if (request()?.status === 'PAID' || isPaid()) {
+                    <div
+                        class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
+                        <span class="text-3xl mb-2 block">✅</span>
+                        <p class="text-green-700 dark:text-green-400 font-medium">Payment Complete!</p>
+                    </div>
                     } @else {
-                    This task is no longer available
+                    @if (!showPayment()) {
+                    <button (click)="togglePayment()"
+                        class="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all">
+                        💳 Pay ${{ request()?.budget }} via PayPal
+                    </button>
+                    } @else {
+                    <div class="space-y-3">
+                        <app-paypal-button [amount]="+(request()?.budget || 0)"
+                            [description]="'Payment for: ' + request()?.title"
+                            (paymentSuccess)="onPaymentSuccess($event)" (paymentError)="onPaymentError($event)"
+                            (paymentCancelled)="onPaymentCancelled()" />
+                        <button (click)="togglePayment()"
+                            class="w-full text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                            Cancel
+                        </button>
+                    </div>
                     }
-                </p>
+                    }
+                </div>
+                }
+
+                <!-- Action Buttons -->
+                <div class="card p-5">
+                    @if (isOwner()) {
+                    @if (request()?.status === 'OPEN') {
+                    <div class="text-center py-4">
+                        <span class="text-4xl mb-2 block">⏳</span>
+                        <p class="text-slate-600 dark:text-slate-400">Waiting for someone to accept</p>
+                    </div>
+                    } @else if (request()?.status === 'IN_PROGRESS') {
+                    <div class="text-center py-4">
+                        <span class="text-4xl mb-2 block">🔄</span>
+                        <p class="text-blue-600 dark:text-blue-400 font-medium">Someone is working on this!</p>
+                    </div>
+                    }
+                    } @else if (canAccept()) {
+                    <div class="space-y-3">
+                        <button (click)="acceptRequest()" [disabled]="isAccepting()"
+                            class="w-full py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold transition-colors disabled:opacity-50">
+                            {{ isAccepting() ? 'Accepting...' : '✓ Accept Task' }}
+                        </button>
+                        <button
+                            class="w-full py-3 rounded-xl border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-800 transition-colors">
+                            💬 Contact User
+                        </button>
+                    </div>
+                    } @else if (canComplete()) {
+                    <div class="space-y-3">
+                        <button (click)="completeTask()" [disabled]="isCompleting()"
+                            class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold transition-colors disabled:opacity-50">
+                            {{ isCompleting() ? 'Completing...' : '✅ Mark as Complete' }}
+                        </button>
+                        <button
+                            class="w-full py-3 rounded-xl border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-800 transition-colors">
+                            💬 Contact Owner
+                        </button>
+                    </div>
+                    } @else {
+                    <div class="text-center py-4">
+                        @if (request()?.status === 'COMPLETED' || request()?.status === 'PAID') {
+                        <span class="text-4xl mb-2 block">✅</span>
+                        <p class="text-green-600 dark:text-green-400">Task Completed</p>
+                        } @else if (request()?.status === 'CANCELLED') {
+                        <span class="text-4xl mb-2 block">❌</span>
+                        <p class="text-red-600 dark:text-red-400">Task Cancelled</p>
+                        } @else {
+                        <p class="text-slate-600 dark:text-slate-400">Task not available</p>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <!-- Review Section (for completed/paid tasks) -->
+                @if ((request()?.status === 'COMPLETED' || request()?.status === 'PAID') && (isOwner() || canReview()))
+                {
+                <div class="card p-5">
+                    <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">⭐ Leave a Review</h3>
+
+                    @if (hasReviewed()) {
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
+                        <span class="text-2xl mb-2 block">✅</span>
+                        <p class="text-green-600 dark:text-green-400 font-medium">You've already reviewed this task</p>
+                    </div>
+                    } @else {
+                    <div class="space-y-3">
+                        <!-- Star Rating -->
+                        <div class="flex items-center justify-center gap-1">
+                            @for (star of [1,2,3,4,5]; track star) {
+                            <button (click)="setRating(star)"
+                                [class]="reviewRating() >= star ? 'text-yellow-500 scale-110' : 'text-slate-300 dark:text-slate-600'"
+                                class="text-3xl transition-all hover:scale-125">
+                                ★
+                            </button>
+                            }
+                        </div>
+                        <p class="text-center text-sm text-slate-500 dark:text-slate-400">
+                            {{ getRatingLabel() }}
+                        </p>
+
+                        <!-- Comment -->
+                        <textarea [(ngModel)]="reviewComment" class="input w-full h-20 resize-none"
+                            placeholder="Share your experience..."></textarea>
+
+                        <!-- Submit -->
+                        <button (click)="submitReview()" [disabled]="reviewRating() === 0 || isSubmittingReview()"
+                            class="w-full py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium transition-colors disabled:opacity-50">
+                            {{ isSubmittingReview() ? 'Submitting...' : 'Submit Review' }}
+                        </button>
+                    </div>
+                    }
+                </div>
                 }
             </div>
         </div>
         }
     </div>
+
+    <!-- Report Modal -->
+    @if (showReportModal()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        (click)="showReportModal.set(false)">
+        <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 max-w-md w-full" (click)="$event.stopPropagation()">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">🚩 Report Task</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason</label>
+                    <select [(ngModel)]="reportReason" class="input w-full">
+                        <option value="">Select a reason</option>
+                        <option value="spam">Spam</option>
+                        <option value="inappropriate">Inappropriate content</option>
+                        <option value="fake">Fake task</option>
+                        <option value="scam">Possible scam</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Details
+                        (optional)</label>
+                    <textarea [(ngModel)]="reportDetails" class="input w-full h-24 resize-none"
+                        placeholder="Provide additional details..."></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button (click)="showReportModal.set(false)"
+                        class="flex-1 py-2 rounded-lg border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300">
+                        Cancel
+                    </button>
+                    <button (click)="submitReport()" [disabled]="!reportReason"
+                        class="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50">
+                        Submit Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
 </div>

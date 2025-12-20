@@ -32,6 +32,11 @@ export class HomeDashboardComponent implements OnInit {
 
   categories = ['all', 'Transportation', 'Home Repairs', 'Tutoring', 'Delivery', 'Cleaning', 'Other Services'];
   urgentFirst = signal(false);
+  sortByDistance = signal(false);
+
+  // User's location for distance calculation
+  userLatitude = signal<number | null>(null);
+  userLongitude = signal<number | null>(null);
 
   // Filtered requests based on category, search, and urgent sort
   filteredRequests = computed(() => {
@@ -61,12 +66,26 @@ export class HomeDashboardComponent implements OnInit {
       });
     }
 
+    // Sort by distance if enabled
+    if (this.sortByDistance() && this.userLatitude() !== null && this.userLongitude() !== null) {
+      const userLat = this.userLatitude()!;
+      const userLng = this.userLongitude()!;
+      requests = [...requests].sort((a, b) => {
+        const distA = this.calculateDistance(userLat, userLng, a.latitude, a.longitude);
+        const distB = this.calculateDistance(userLat, userLng, b.latitude, b.longitude);
+        if (distA === -1) return 1;
+        if (distB === -1) return -1;
+        return distA - distB;
+      });
+    }
+
     return requests;
   });
 
   ngOnInit() {
     this.loadUserData();
     this.loadRequests();
+    this.initUserLocation(); // Get user location for distance calculation
     // Check if user needs onboarding
     if (!localStorage.getItem('5alasly-onboarded')) {
       this.showOnboarding.set(true);
@@ -81,6 +100,18 @@ export class HomeDashboardComponent implements OnInit {
     const currentUser = this.authService.currentUser();
     if (currentUser) {
       this.userName.set(currentUser.name);
+
+      // Load user's full data including location
+      this.apiService.getUserById(currentUser.userId).subscribe({
+        next: (user: any) => {
+          // Set user's location for distance calculation
+          if (user.latitude && user.longitude) {
+            this.userLatitude.set(user.latitude);
+            this.userLongitude.set(user.longitude);
+          }
+        },
+        error: (err) => console.error('Error loading user location:', err)
+      });
 
       // Load user stats
       this.apiService.getUserStats(currentUser.userId).subscribe({
@@ -149,5 +180,61 @@ export class HomeDashboardComponent implements OnInit {
       button.innerText = '✓';
       setTimeout(() => button.innerText = originalText, 2000);
     });
+  }
+
+  // Haversine formula for calculating distance between two points
+  calculateDistance(lat1: number, lon1: number, lat2?: number, lon2?: number): number {
+    if (!lat2 || !lon2 || lat1 === 0 || lon1 === 0) {
+      return -1; // Invalid coordinates
+    }
+
+    const R = 6371; // Radius of Earth in km
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10; // Distance in km, 1 decimal
+  }
+
+  private toRad(deg: number): number {
+    return deg * (Math.PI / 180);
+  }
+
+  // Get distance for display in template - uses Cairo center as fallback
+  getDistance(lat?: number, lng?: number): string | null {
+    if (!lat || !lng) {
+      return null;
+    }
+    // Use user location if available, otherwise default to Cairo center
+    const userLat = this.userLatitude() || 30.0444; // Cairo center
+    const userLng = this.userLongitude() || 31.2357;
+
+    const dist = this.calculateDistance(userLat, userLng, lat, lng);
+    if (dist === -1) return null;
+    return dist.toString();
+  }
+
+  // Initialize user location for distance calculation
+  initUserLocation(): void {
+    // Set Cairo as default immediately so distance shows right away
+    if (this.userLatitude() === null) {
+      this.userLatitude.set(30.0444);
+      this.userLongitude.set(31.2357);
+    }
+
+    // Then try to get actual location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.userLatitude.set(position.coords.latitude);
+          this.userLongitude.set(position.coords.longitude);
+        },
+        (error) => {
+          console.warn('Could not get user location, using Cairo center:', error);
+        }
+      );
+    }
   }
 }

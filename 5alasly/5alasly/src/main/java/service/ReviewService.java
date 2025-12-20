@@ -32,8 +32,9 @@ public class ReviewService {
         User ratedUser = userRepository.findById(dto.getRatedUserId())
                 .orElseThrow(() -> new RuntimeException("Rated user not found"));
 
-        if (request.getStatus() != ServiceRequest.RequestStatus.COMPLETED) {
-            throw new RuntimeException("Can only review completed requests");
+        if (request.getStatus() != ServiceRequest.RequestStatus.COMPLETED
+                && request.getStatus() != ServiceRequest.RequestStatus.PAID) {
+            throw new RuntimeException("Can only review completed or paid requests");
         }
 
         Review review = new Review();

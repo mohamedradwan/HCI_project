@@ -46,11 +46,11 @@ export const routes: Routes = [
       .then(m => m.UserProfileComponent)
   },
   {
-    path: 'user',
+    path: 'user', // Handles /user?id=1
     title: 'User Profile | 5alasly',
     data: { key: 'user' },
-    loadComponent: () => import('./components/public-profile/public-profile.component')
-      .then(m => m.PublicProfileComponent)
+    loadComponent: () => import('./components/user-profile/user-profile.component')
+      .then(m => m.UserProfileComponent)
   },
   {
     path: 'settings',
