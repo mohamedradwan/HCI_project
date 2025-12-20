@@ -1,52 +1,70 @@
-<div class="min-h-screen bg-slate-50">
+<div class="min-h-screen bg-slate-50 dark:bg-dark-950 transition-colors duration-300">
     <app-nav-bar [currentScreen]="'profile'" />
 
     <div class="max-w-6xl mx-auto px-4 py-8">
         <!-- Loading State -->
         @if (isLoading()) {
-        <div class="bg-white rounded-2xl p-12 border border-slate-200 text-center">
-            <p class="text-slate-500">Loading profile...</p>
+        <div class="card p-12 text-center">
+            <div
+                class="w-10 h-10 border-3 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4">
+            </div>
+            <p class="text-slate-500 dark:text-slate-400">Loading profile...</p>
         </div>
         }
 
         <!-- Error State -->
         @if (error() && !isLoading()) {
-        <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+        <div
+            class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-red-700 dark:text-red-300">
             {{ error() }}
         </div>
         }
 
         <!-- Profile Content -->
         @if (!isLoading() && user()) {
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+        <div class="card overflow-hidden mb-8">
             <!-- Header Banner -->
-            <div class="h-32 bg-gradient-to-br from-blue-500 to-orange-500"></div>
+            <div class="h-32 animated-gradient"></div>
 
             <div class="px-8 pb-8">
                 <!-- Avatar and Actions -->
                 <div class="flex justify-between items-start -mt-16 mb-4">
-                    <app-avatar [fallback]="getInitials()"
-                        className="w-32 h-32 border-4 border-white shadow-lg text-3xl" />
+                    <div class="relative group">
+                        <!-- Avatar or Image -->
+                        @if (user()?.avatarUrl || avatarUrl()) {
+                        <img [src]="avatarUrl() || user()?.avatarUrl"
+                            class="w-32 h-32 border-4 border-white dark:border-dark-800 shadow-lg rounded-full object-cover"
+                            alt="Avatar" />
+                        } @else {
+                        <app-avatar [fallback]="getInitials()"
+                            className="w-32 h-32 border-4 border-white dark:border-dark-800 shadow-lg text-3xl" />
+                        }
+                        <!-- Upload Overlay -->
+                        <label
+                            class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <span class="text-white text-2xl">📷</span>
+                            <input type="file" accept="image/*" class="hidden" (change)="onAvatarChange($event)" />
+                        </label>
+                    </div>
                     <div class="mt-20 flex gap-3">
                         <app-button variant="outline" className="rounded-xl" (clicked)="navigate('create')">
-                            Create Request
+                            ➕ Create Request
                         </app-button>
-                        <app-button variant="outline" className="rounded-xl text-red-600 border-red-200 hover:bg-red-50"
-                            (clicked)="logout()">
-                            Logout
+                        <app-button variant="danger" className="rounded-xl" (clicked)="logout()">
+                            🚪 Logout
                         </app-button>
                     </div>
                 </div>
 
                 <!-- User Info -->
                 <div class="flex items-center gap-2 mb-2">
-                    <h1 class="text-3xl font-bold text-slate-900">{{ user()?.name }}</h1>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">{{ user()?.name }}</h1>
                     @if (user()?.verified) {
                     <app-badge variant="secondary" className="gap-1">✓ Verified</app-badge>
                     }
                 </div>
-                <p class="text-slate-600 mb-2">{{ user()?.email }}</p>
-                <p class="text-slate-600 mb-4">
+                <p class="text-slate-600 dark:text-slate-400 mb-2">{{ user()?.email }}</p>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
                     ⭐ {{ user()?.rating?.toFixed(1) || '0.0' }} ({{ user()?.totalReviews || 0 }} reviews)
                 </p>
             </div>
@@ -55,53 +73,56 @@
         <!-- Stats Cards -->
         @if (stats()) {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="card p-6 hover:shadow-lg transition-all duration-300 group">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-slate-600 text-sm mb-1">Completed Tasks</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.completedTasks || 0 }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-1">Completed Tasks</p>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()?.completedTasks || 0 }}
+                        </p>
                     </div>
                     <div
-                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-green-100 text-green-600">
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
                         ✅
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="card p-6 hover:shadow-lg transition-all duration-300 group">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-slate-600 text-sm mb-1">This Month</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.thisMonth || 0 }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-1">This Month</p>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()?.thisMonth || 0 }}</p>
                     </div>
                     <div
-                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-blue-100 text-blue-600">
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
                         📈
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="card p-6 hover:shadow-lg transition-all duration-300 group">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-slate-600 text-sm mb-1">Active Clients</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.activeClients || 0 }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-1">Active Clients</p>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()?.activeClients || 0 }}
+                        </p>
                     </div>
                     <div
-                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-orange-100 text-orange-600">
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
                         👥
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="card p-6 hover:shadow-lg transition-all duration-300 group">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-slate-600 text-sm mb-1">Avg Rating</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats()?.avgRating?.toFixed(1) || '0.0' }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-1">Avg Rating</p>
+                        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()?.avgRating?.toFixed(1)
+                            || '0.0' }}</p>
                     </div>
                     <div
-                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-amber-100 text-amber-600">
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
                         ⭐
                     </div>
                 </div>
@@ -109,44 +130,164 @@
         </div>
         }
 
-        <!-- User's Requests -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 class="text-xl font-bold text-slate-900 mb-4">My Service Requests</h2>
+        <!-- Tabs -->
+        <div class="card p-6">
+            <div class="flex gap-2 mb-6 border-b border-slate-200 dark:border-dark-700 pb-4">
+                <button (click)="setActiveTab('my-requests')"
+                    [ngClass]="activeTab() === 'my-requests' ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700'"
+                    class="px-4 py-2 rounded-lg font-medium transition-all">
+                    📋 My Requests ({{ userRequests().length }})
+                </button>
+                <button (click)="setActiveTab('in-progress')"
+                    [ngClass]="activeTab() === 'in-progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700'"
+                    class="px-4 py-2 rounded-lg font-medium transition-all">
+                    🔄 Accepted ({{ inProgressRequests().length }})
+                </button>
+                <button (click)="setActiveTab('completed')"
+                    [ngClass]="activeTab() === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700'"
+                    class="px-4 py-2 rounded-lg font-medium transition-all">
+                    ✅ My Completed ({{ completedRequests().length }})
+                </button>
+                <button (click)="setActiveTab('helped')"
+                    [ngClass]="activeTab() === 'helped' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700'"
+                    class="px-4 py-2 rounded-lg font-medium transition-all">
+                    🤝 Helped ({{ helperCompletedTasks().length }})
+                </button>
+            </div>
 
+            <!-- My Requests Tab -->
+            @if (activeTab() === 'my-requests') {
             @if (userRequests().length === 0) {
             <div class="text-center py-8">
-                <p class="text-slate-500 mb-4">You haven't created any requests yet</p>
+                <div
+                    class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-3xl">
+                    📭</div>
+                <p class="text-slate-500 dark:text-slate-400 mb-4">You haven't created any requests yet</p>
                 <app-button (clicked)="navigate('create')">Create Your First Request</app-button>
             </div>
-            }
-
-            @if (userRequests().length > 0) {
+            } @else {
             <div class="space-y-4">
                 @for (request of userRequests(); track request.id) {
-                <div class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
+                <div class="border border-slate-200 dark:border-dark-700 rounded-xl p-4 hover:shadow-md dark:hover:shadow-dark-800/50 transition-all cursor-pointer bg-white dark:bg-dark-800"
                     (click)="viewRequest(request.id!)">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <h3 class="font-medium text-slate-900">{{ request.title }}</h3>
+                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                <h3 class="font-medium text-slate-900 dark:text-white">{{ request.title }}</h3>
                                 @if (request.urgent) {
-                                <app-badge className="bg-red-100 text-red-700 border-0">Urgent</app-badge>
+                                <app-badge
+                                    className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-0">🔥
+                                    Urgent</app-badge>
                                 }
                                 <app-badge [className]="getStatusColor(request.status || 'OPEN')">
                                     {{ request.status }}
                                 </app-badge>
                             </div>
-                            <p class="text-sm text-slate-600 mb-2">{{ request.category }}</p>
-                            <div class="flex gap-4 text-sm text-slate-500">
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">{{ request.category }}</p>
+                            <div class="flex gap-4 text-sm text-slate-500 dark:text-slate-400">
                                 <span>📍 {{ request.location }}</span>
-                                <span class="text-green-600">💵 {{ request.budget }}</span>
+                                <span class="text-green-600 dark:text-green-400">💵 {{ request.budget }}</span>
                                 <span>📅 {{ request.date }}</span>
                             </div>
                         </div>
+                        @if (request.status === 'OPEN' || request.status === 'IN_PROGRESS') {
+                        <app-button variant="danger" size="sm" (clicked)="cancelRequest(request.id!, $event)">
+                            Cancel
+                        </app-button>
+                        }
                     </div>
                 </div>
                 }
             </div>
+            }
+            }
+
+            <!-- In Progress Tab -->
+            @if (activeTab() === 'in-progress') {
+            @if (inProgressRequests().length === 0) {
+            <div class="text-center py-8">
+                <div
+                    class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-3xl">
+                    🔄</div>
+                <p class="text-slate-500 dark:text-slate-400">No tasks in progress</p>
+            </div>
+            } @else {
+            <div class="space-y-4">
+                @for (request of inProgressRequests(); track request.id) {
+                <div class="border border-blue-200 dark:border-blue-800 rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20 cursor-pointer hover:shadow-md transition-all"
+                    (click)="viewRequest(request.id!)">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xl">🔄</span>
+                        <h3 class="font-medium text-slate-900 dark:text-white">{{ request.title }}</h3>
+                    </div>
+                    <div class="flex gap-4 text-sm text-slate-600 dark:text-slate-400">
+                        <span>📍 {{ request.location }}</span>
+                        <span class="text-green-600 dark:text-green-400">💵 {{ request.budget }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+            }
+
+            <!-- Completed Tab -->
+            @if (activeTab() === 'completed') {
+            @if (completedRequests().length === 0) {
+            <div class="text-center py-8">
+                <div
+                    class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-3xl">
+                    ✅</div>
+                <p class="text-slate-500 dark:text-slate-400">No completed tasks yet</p>
+            </div>
+            } @else {
+            <div class="space-y-4">
+                @for (request of completedRequests(); track request.id) {
+                <div class="border border-green-200 dark:border-green-800 rounded-xl p-4 bg-green-50 dark:bg-green-900/20 cursor-pointer hover:shadow-md transition-all"
+                    (click)="viewRequest(request.id!)">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xl">✅</span>
+                        <h3 class="font-medium text-slate-900 dark:text-white">{{ request.title }}</h3>
+                    </div>
+                    <div class="flex gap-4 text-sm text-slate-600 dark:text-slate-400">
+                        <span>📍 {{ request.location }}</span>
+                        <span class="text-green-600 dark:text-green-400">💵 {{ request.budget }}</span>
+                        <span>📅 {{ request.date }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+            }
+
+            <!-- Helped Tab (Tasks where user was helper) -->
+            @if (activeTab() === 'helped') {
+            @if (helperCompletedTasks().length === 0) {
+            <div class="text-center py-8">
+                <div
+                    class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-3xl">
+                    🤝</div>
+                <p class="text-slate-500 dark:text-slate-400">You haven't helped anyone yet</p>
+                <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Accept tasks from the dashboard to start
+                    helping!</p>
+            </div>
+            } @else {
+            <div class="space-y-4">
+                @for (request of helperCompletedTasks(); track request.id) {
+                <div class="border border-purple-200 dark:border-purple-800 rounded-xl p-4 bg-purple-50 dark:bg-purple-900/20 cursor-pointer hover:shadow-md transition-all"
+                    (click)="viewRequest(request.id!)">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xl">🤝</span>
+                        <h3 class="font-medium text-slate-900 dark:text-white">{{ request.title }}</h3>
+                    </div>
+                    <div class="flex gap-4 text-sm text-slate-600 dark:text-slate-400">
+                        <span>📍 {{ request.location }}</span>
+                        <span class="text-green-600 dark:text-green-400">💵 {{ request.budget }}</span>
+                        <span>📅 {{ request.date }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+            }
             }
         </div>
         }

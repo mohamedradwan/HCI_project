@@ -1,6 +1,5 @@
 package service;
 
-
 import dto.ReviewDTO;
 import entity.*;
 import repository.*;
@@ -19,6 +18,11 @@ public class ReviewService {
 
     @Transactional
     public Review createReview(Long reviewerId, ReviewDTO dto) {
+        // Validate rating is between 1 and 5
+        if (dto.getRating() == null || dto.getRating() < 1.0 || dto.getRating() > 5.0) {
+            throw new RuntimeException("Rating must be between 1 and 5");
+        }
+
         ServiceRequest request = requestRepository.findById(dto.getRequestId())
                 .orElseThrow(() -> new RuntimeException("Request not found"));
 

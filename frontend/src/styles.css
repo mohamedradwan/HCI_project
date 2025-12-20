@@ -1,3 +1,325 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== Theme Transition ===== */
+html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===== Base Layer ===== */
+@layer base {
+    body {
+        @apply bg-slate-50 text-slate-900 dark:bg-dark-950 dark:text-slate-100;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Selection color */
+    ::selection {
+        @apply bg-primary-500/30;
+    }
+}
+
+/* ===== Component Layer ===== */
+@layer components {
+
+    /* Glassmorphism Card */
+    .glass {
+        @apply bg-white/70 dark:bg-dark-900/70 backdrop-blur-xl border border-white/20 dark:border-white/10;
+    }
+
+    .glass-strong {
+        @apply bg-white/90 dark:bg-dark-900/90 backdrop-blur-2xl border border-white/30 dark:border-white/15;
+    }
+
+    /* Gradient Text */
+    .gradient-text {
+        @apply bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 bg-clip-text text-transparent;
+    }
+
+    /* Animated Gradient Background */
+    .animated-gradient {
+        background: linear-gradient(-45deg, #6366f1, #8b5cf6, #a855f7, #ec4899, #f97316);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+    }
+
+    /* Glow Effect */
+    .glow-sm {
+        box-shadow: 0 0 15px -3px rgb(99 102 241 / 0.3);
+    }
+
+    .glow {
+        box-shadow: 0 0 25px -5px rgb(99 102 241 / 0.4);
+    }
+
+    .glow-lg {
+        box-shadow: 0 0 35px -5px rgb(99 102 241 / 0.5);
+    }
+
+    /* Card Styles */
+    .card {
+        @apply bg-white dark:bg-dark-800 rounded-2xl border border-slate-200 dark:border-dark-700 shadow-sm;
+    }
+
+    .card-hover {
+        @apply card hover:shadow-xl hover:border-primary-200 dark:hover:border-primary-800 hover:-translate-y-1 transition-all duration-300;
+    }
+
+    /* Input Styles */
+    .input {
+        @apply w-full px-4 py-3 bg-white dark:bg-dark-800 border border-slate-300 dark:border-dark-600 rounded-xl;
+        @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+        @apply placeholder:text-slate-400 dark:placeholder:text-dark-400;
+        @apply text-slate-900 dark:text-slate-100;
+        @apply transition-all duration-200;
+    }
+
+    .input:focus {
+        @apply glow-sm;
+    }
+
+    /* Badge */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-primary {
+        @apply badge bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300;
+    }
+
+    .badge-success {
+        @apply badge bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300;
+    }
+
+    .badge-warning {
+        @apply badge bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300;
+    }
+
+    .badge-danger {
+        @apply badge bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300;
+    }
+}
+
+/* ===== Utilities Layer ===== */
+@layer utilities {
+
+    /* Hide scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* Mesh gradient backgrounds */
+    .mesh-gradient-1 {
+        background:
+            radial-gradient(at 40% 20%, hsla(248, 87%, 66%, 0.3) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, hsla(343, 100%, 76%, 0.2) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, hsla(218, 87%, 66%, 0.2) 0px, transparent 50%),
+            radial-gradient(at 80% 50%, hsla(24, 100%, 66%, 0.15) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, hsla(248, 87%, 66%, 0.2) 0px, transparent 50%);
+    }
+
+    .mesh-gradient-dark {
+        background:
+            radial-gradient(at 40% 20%, hsla(248, 87%, 46%, 0.2) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, hsla(343, 100%, 56%, 0.15) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, hsla(218, 87%, 46%, 0.15) 0px, transparent 50%);
+    }
+}
+
+/* ===== Animations ===== */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ===== Custom Scrollbar ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-slate-100 dark:bg-dark-900;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-dark-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-dark-500;
+}
+
+/* ===== Micro-Animations ===== */
+
+/* Page fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-soft {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slideUp {
+    animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Mobile menu slide-in */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.animate-slideIn {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.animate-delay-100 {
+    animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+    animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+    animation-delay: 300ms;
+}
+
+.animate-delay-400 {
+    animation-delay: 400ms;
+}
+
+/* ===== Skeleton Loading ===== */
+.skeleton {
+    @apply bg-slate-200 dark:bg-dark-700 rounded-lg;
+    background: linear-gradient(90deg,
+            theme('colors.slate.200') 0%,
+            theme('colors.slate.100') 50%,
+            theme('colors.slate.200') 100%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+}
+
+.dark .skeleton {
+    background: linear-gradient(90deg,
+            theme('colors.dark.700') 0%,
+            theme('colors.dark.600') 50%,
+            theme('colors.dark.700') 100%);
+    background-size: 200% 100%;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ===== Enhanced Hover Effects ===== */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+/* Button press effect */
+.btn-press:active {
+    transform: scale(0.97);
+}
+
+/* Smooth focus ring */
+.focus-ring:focus {
+    @apply outline-none ring-2 ring-primary-500/50 ring-offset-2 ring-offset-white dark:ring-offset-dark-900;
+}

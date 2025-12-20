@@ -1,4 +1,5 @@
 package entity;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,6 +43,9 @@ public class User {
 
     @Column(nullable = false)
     private Boolean verified = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String avatarUrl;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

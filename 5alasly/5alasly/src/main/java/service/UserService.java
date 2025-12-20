@@ -36,8 +36,7 @@ public class UserService {
                 user.getName(),
                 user.getEmail(),
                 "mock-jwt-token-" + user.getId(),
-                "Registration successful"
-        );
+                "Registration successful");
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -53,8 +52,7 @@ public class UserService {
                 user.getName(),
                 user.getEmail(),
                 "mock-jwt-token-" + user.getId(),
-                "Login successful"
-        );
+                "Login successful");
     }
 
     public User getUserById(Long id) {
@@ -72,8 +70,7 @@ public class UserService {
                 completedTasks,
                 thisMonth,
                 user.getActiveClients(),
-                user.getRating()
-        );
+                user.getRating());
     }
 
     @Transactional
@@ -87,6 +84,27 @@ public class UserService {
             user.setTotalReviews(totalReviews);
             userRepository.save(user);
         }
+    }
+
+    @Transactional
+    public User updateAvatar(Long userId, String avatarUrl) {
+        User user = getUserById(userId);
+        user.setAvatarUrl(avatarUrl);
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = getUserById(userId);
+
+        // Verify current password
+        if (!verifyPassword(currentPassword, user.getPasswordHash())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        // Update to new password
+        user.setPasswordHash(hashPassword(newPassword));
+        userRepository.save(user);
     }
 
     private String hashPassword(String password) {

@@ -1,22 +1,31 @@
-<div class="min-h-screen bg-slate-50">
+<div class="min-h-screen bg-slate-50 dark:bg-dark-950 transition-colors duration-300">
+  <!-- Onboarding Modal for first-time users -->
+  @if (showOnboarding()) {
+  <app-onboarding (completed)="onboardingComplete()" />
+  }
+
   <app-nav-bar [currentScreen]="'home'" />
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900 mb-2">Welcome back, {{ userName() }}! 👋</h1>
-      <p class="text-slate-600">Here's what's happening in your community today</p>
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        Welcome back, <span class="gradient-text">{{ userName() }}</span>! 👋
+      </h1>
+      <p class="text-slate-600 dark:text-slate-400">Here's what's happening in your community today</p>
     </div>
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       @for (stat of stats(); track stat.label) {
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+      <div class="card p-6 hover:shadow-lg transition-all duration-300 group">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-slate-600 text-sm mb-1">{{ stat.label }}</p>
-            <p class="text-2xl font-bold text-slate-900">{{ stat.value }}</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-1">{{ stat.label }}</p>
+            <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ stat.value }}</p>
           </div>
-          <div [class]="'w-12 h-12 rounded-xl flex items-center justify-center text-2xl ' + stat.color">
+          <div
+            [class]="'w-12 h-12 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform ' + stat.color">
             {{ stat.icon }}
           </div>
         </div>
@@ -27,52 +36,139 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Requests List -->
       <div class="lg:col-span-2">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold text-slate-900">Available Requests</h2>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Available Requests</h2>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-4">
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
+            <input type="text" placeholder="Search requests..." (input)="onSearchChange($event)"
+              class="input pl-12 w-full" />
+          </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="flex flex-wrap items-center gap-2 mb-6">
+          <div class="flex flex-wrap gap-2 flex-1">
+            @for (cat of categories; track cat) {
+            <button (click)="setCategory(cat)"
+              [ngClass]="selectedCategory() === cat ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-primary-300 dark:border-primary-700' : 'bg-white dark:bg-dark-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-dark-700 hover:bg-slate-50 dark:hover:bg-dark-700'"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium border transition-all capitalize">
+              {{ cat === 'all' ? '🏷️ All' : cat }}
+            </button>
+            }
+          </div>
+
+          <!-- Urgent Toggle -->
+          <button (click)="urgentFirst.set(!urgentFirst())"
+            [ngClass]="urgentFirst() ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700' : 'bg-white dark:bg-dark-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-dark-700 hover:bg-slate-50 dark:hover:bg-dark-700'"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex-shrink-0">
+            🔥 Urgent First
+          </button>
         </div>
 
         <!-- Loading State -->
         @if (isLoading()) {
-        <div class="bg-white rounded-2xl p-12 border border-slate-200 text-center">
-          <p class="text-slate-500">Loading requests...</p>
+        <div class="card p-12 text-center">
+          <div
+            class="w-10 h-10 border-3 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4">
+          </div>
+          <p class="text-slate-500 dark:text-slate-400">Loading requests...</p>
         </div>
         }
 
-        <!-- Empty State -->
-        @if (!isLoading() && nearbyRequests().length === 0) {
-        <div class="bg-white rounded-2xl p-12 border border-slate-200 text-center">
-          <p class="text-slate-500 mb-2">No requests available at the moment</p>
-          <p class="text-sm text-slate-400">Check back later for new opportunities</p>
+        <!-- Loading State - Skeleton Cards -->
+        @if (isLoading()) {
+        <div class="space-y-4">
+          @for (i of [1, 2, 3]; track i) {
+          <div class="card p-6 animate-fadeIn" [style.animation-delay]="i * 100 + 'ms'">
+            <div class="flex items-start gap-4">
+              <div class="skeleton w-12 h-12 rounded-full"></div>
+              <div class="flex-1 space-y-3">
+                <div class="skeleton h-5 w-3/4 rounded"></div>
+                <div class="skeleton h-4 w-1/2 rounded"></div>
+                <div class="flex gap-3 mt-4">
+                  <div class="skeleton h-6 w-20 rounded-lg"></div>
+                  <div class="skeleton h-6 w-16 rounded-lg"></div>
+                  <div class="skeleton h-6 w-24 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Empty State - Enhanced -->
+        @if (!isLoading() && filteredRequests().length === 0) {
+        <div class="card p-12 text-center animate-fadeIn">
+          <div
+            class="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900/30 dark:to-accent-900/30 flex items-center justify-center">
+            <span class="text-5xl">📭</span>
+          </div>
+          <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">No requests found</h3>
+          <p class="text-slate-500 dark:text-slate-400 mb-6">
+            @if (searchQuery() || selectedCategory() !== 'all') {
+            Try adjusting your search or clear filters
+            } @else {
+            Be the first to post a request in your community!
+            }
+          </p>
+          <button (click)="navigate('create')"
+            class="px-6 py-3 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all hover:scale-105">
+            ➕ Post a Request
+          </button>
         </div>
         }
 
         <!-- Requests -->
-        @if (!isLoading() && nearbyRequests().length > 0) {
+        @if (!isLoading() && filteredRequests().length > 0) {
         <div class="space-y-4">
-          @for (request of nearbyRequests(); track request.id) {
-          <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-lg transition-all cursor-pointer"
-            (click)="viewRequestDetails(request.id!)">
+          @for (request of filteredRequests(); track request.id) {
+          <div class="card-hover p-6 cursor-pointer" (click)="viewRequestDetails(request.id!)">
             <div class="flex items-start gap-4">
+              <!-- Show image if userAvatar is a data URL or URL, otherwise show initials -->
+              @if (request.userAvatar?.startsWith('data:') || request.userAvatar?.startsWith('http')) {
+              <img [src]="request.userAvatar" class="w-12 h-12 rounded-full object-cover" alt="Avatar" />
+              } @else {
               <app-avatar [fallback]="request.userAvatar || 'U'" className="w-12 h-12" />
+              }
 
               <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <h3 class="text-lg font-medium text-slate-900">{{ request.title }}</h3>
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ request.title }}</h3>
                   @if (request.urgent) {
-                  <app-badge className="bg-red-100 text-red-700 border-0">Urgent</app-badge>
+                  <span class="badge-danger">🔥 Urgent</span>
                   }
-                  <app-badge variant="secondary" className="text-xs">{{ request.category }}</app-badge>
+                  <span class="badge-primary">{{ request.category }}</span>
                 </div>
-                <p class="text-slate-600 mb-3">{{ request.userName }}</p>
+                <p class="text-slate-600 dark:text-slate-400 mb-3">{{ request.userName }}</p>
 
-                <div class="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
-                  <span>📍 {{ request.location }}</span>
-                  <span class="text-green-600 font-medium">💵 {{ request.budget }}</span>
-                  <span>⭐ {{ request.userRating?.toFixed(1) || 'New' }}</span>
-                  <span>📅 {{ request.date }}</span>
+                <div class="flex flex-wrap gap-4 text-sm mb-4">
+                  <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                    📍 {{ request.location }}
+                  </span>
+                  <span class="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
+                    💵 {{ request.budget }}
+                  </span>
+                  <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                    ⭐ {{ request.userRating?.toFixed(1) || 'New' }}
+                  </span>
+                  <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                    📅 {{ request.date }}
+                  </span>
                 </div>
 
-                <app-button>View Details</app-button>
+                <div class="flex items-center gap-2">
+                  <app-button>View Details →</app-button>
+                  <button (click)="shareRequest(request.id!, $event)"
+                    class="px-3 py-2 rounded-lg border border-slate-200 dark:border-dark-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700 transition-all"
+                    title="Copy link">
+                    🔗
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -83,22 +179,49 @@
 
       <!-- Quick Actions -->
       <div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">Quick Actions</h2>
-        <div class="space-y-3">
-          <app-button className="w-full justify-start py-4 rounded-xl" (clicked)="navigate('create')">
-            <div class="text-left w-full">
-              <p class="font-medium mb-1">Post New Request</p>
-              <p class="text-xs opacity-70">Get help from your community</p>
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Quick Actions</h2>
+        <div class="space-y-4">
+          <div class="card-hover p-5 cursor-pointer group" (click)="navigate('create')">
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-xl text-white shadow-lg shadow-primary-500/25 group-hover:scale-110 transition-transform">
+                ➕
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-slate-900 dark:text-white mb-0.5">Post New Request</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Get help from your community</p>
+              </div>
+              <span class="text-slate-400 group-hover:translate-x-1 transition-transform">→</span>
             </div>
-          </app-button>
+          </div>
 
-          <app-button variant="outline" className="w-full justify-start py-4 rounded-xl border-2 mt-4"
-            (clicked)="navigate('profile')">
-            <div class="text-left w-full">
-              <p class="font-medium mb-1 text-slate-900">Edit Profile</p>
-              <p class="text-xs text-slate-600">Update your information</p>
+          <div class="card-hover p-5 cursor-pointer group" (click)="navigate('profile')">
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-xl text-white shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform">
+                👤
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-slate-900 dark:text-white mb-0.5">View Profile</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Check your requests & stats</p>
+              </div>
+              <span class="text-slate-400 group-hover:translate-x-1 transition-transform">→</span>
             </div>
-          </app-button>
+          </div>
+
+          <div class="card-hover p-5 cursor-pointer group" (click)="navigate('settings')">
+            <div class="flex items-center gap-4">
+              <div
+                class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-xl text-white shadow-lg shadow-slate-500/25 group-hover:scale-110 transition-transform">
+                ⚙️
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-slate-900 dark:text-white mb-0.5">Settings</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Manage your preferences</p>
+              </div>
+              <span class="text-slate-400 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 package service;
 
-
 import dto.*;
 import entity.*;
 import repository.*;
@@ -107,9 +106,66 @@ public class ServiceRequestService {
         return convertToDTO(request);
     }
 
+    @Transactional
+    public ServiceRequestDTO cancelRequest(Long requestId, Long userId) {
+        ServiceRequest request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+
+        // Only allow owner to cancel
+        if (!request.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Only the request owner can cancel");
+        }
+
+        if (request.getStatus() == ServiceRequest.RequestStatus.COMPLETED) {
+            throw new RuntimeException("Cannot cancel completed request");
+        }
+
+        request.setStatus(ServiceRequest.RequestStatus.CANCELLED);
+        requestRepository.save(request);
+
+        return convertToDTO(request);
+    }
+
+    // Get requests CREATED BY this user that are completed
+    public List<ServiceRequestDTO> getCompletedRequestsByUser(Long userId) {
+        return requestRepository.findByUserIdAndStatus(userId, ServiceRequest.RequestStatus.COMPLETED)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get requests CREATED BY this user that are in progress
+    public List<ServiceRequestDTO> getInProgressRequestsByUser(Long userId) {
+        return requestRepository.findByUserIdAndStatus(userId, ServiceRequest.RequestStatus.IN_PROGRESS)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get tasks where this user is the HELPER (accepted tasks)
+    public List<ServiceRequestDTO> getAcceptedTasksByHelper(Long helperUserId) {
+        return taskAssignmentRepository.findByHelperUserId(helperUserId)
+                .stream()
+                .filter(ta -> ta.getCompletedAt() == null) // Only in-progress (not completed)
+                .map(ta -> convertToDTO(ta.getServiceRequest()))
+                .collect(Collectors.toList());
+    }
+
+    // Get completed tasks where this user was the HELPER
+    public List<ServiceRequestDTO> getCompletedTasksByHelper(Long helperUserId) {
+        return taskAssignmentRepository.findByHelperUserId(helperUserId)
+                .stream()
+                .filter(ta -> ta.getCompletedAt() != null) // Only completed
+                .map(ta -> convertToDTO(ta.getServiceRequest()))
+                .collect(Collectors.toList());
+    }
+
     private ServiceRequestDTO convertToDTO(ServiceRequest request) {
         User user = request.getUser();
-        String avatar = user.getName().substring(0, Math.min(2, user.getName().length())).toUpperCase();
+        // Use actual avatar URL if available, otherwise use initials
+        String avatar = user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()
+                ? user.getAvatarUrl()
+                : user.getName().substring(0, Math.min(2, user.getName().length())).toUpperCase();
 
         long hours = ChronoUnit.HOURS.between(request.getCreatedAt(), LocalDateTime.now());
         String timeAgo = hours < 24 ? hours + " hours ago" : (hours / 24) + " days ago";
@@ -130,7 +186,6 @@ public class ServiceRequestService {
                 request.getStatus().name(),
                 request.getUrgent(),
                 "1.2 km", // Mock distance
-                timeAgo
-        );
+                timeAgo);
     }
 }

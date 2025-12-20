@@ -81,12 +81,44 @@ export class RequestDetailsComponent implements OnInit {
     });
   }
 
+  isCompleting = signal(false);
+
+  completeTask() {
+    const req = this.request();
+    if (!req?.id) return;
+
+    this.isCompleting.set(true);
+    this.error.set('');
+
+    this.apiService.completeRequest(req.id).subscribe({
+      next: (updatedRequest) => {
+        this.request.set(updatedRequest);
+        this.successMessage.set('Task marked as completed! 🎉');
+        this.isCompleting.set(false);
+      },
+      error: (err) => {
+        console.error('Error completing request:', err);
+        this.error.set('Failed to complete task. Please try again.');
+        this.isCompleting.set(false);
+      }
+    });
+  }
+
   canAccept(): boolean {
     const req = this.request();
     const userId = this.authService.getCurrentUserId();
 
     // Can accept if: request is OPEN and current user is not the owner
     return req?.status === 'OPEN' && req?.userId !== userId;
+  }
+
+  // Check if current user is the helper (accepted the task)
+  canComplete(): boolean {
+    const req = this.request();
+    // Can complete if: status is IN_PROGRESS and user is not the owner
+    // Note: Ideally we'd check if user is the assigned helper, but for now we allow any non-owner
+    const userId = this.authService.getCurrentUserId();
+    return req?.status === 'IN_PROGRESS' && req?.userId !== userId;
   }
 
   isOwner(): boolean {
@@ -97,11 +129,11 @@ export class RequestDetailsComponent implements OnInit {
 
   getStatusColor(status: string): string {
     switch (status) {
-      case 'OPEN': return 'bg-green-100 text-green-700';
-      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
-      case 'COMPLETED': return 'bg-slate-100 text-slate-700';
-      case 'CANCELLED': return 'bg-red-100 text-red-700';
-      default: return 'bg-slate-100 text-slate-700';
+      case 'OPEN': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';
+      case 'IN_PROGRESS': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
+      case 'COMPLETED': return 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300';
+      case 'CANCELLED': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+      default: return 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300';
     }
   }
 
@@ -136,7 +168,26 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
+  viewUserProfile(userId: number): void {
+    const currentUserId = this.authService.getCurrentUserId();
+    if (currentUserId && userId === currentUserId) {
+      // Viewing own profile - go to full profile page with edit options
+      this.router.navigate(['/profile']);
+    } else {
+      // Viewing another user's profile - go to public profile
+      this.router.navigate(['/user'], { queryParams: { id: userId } });
+    }
+  }
+
   navigate(screen: string): void {
     this.router.navigate([`/${screen}`]);
+  }
+
+  shareRequest(): void {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      this.successMessage.set('Link copied to clipboard!');
+      setTimeout(() => this.successMessage.set(''), 3000);
+    });
   }
 }

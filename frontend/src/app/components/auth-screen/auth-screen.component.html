@@ -1,121 +1,167 @@
-<div class="min-h-screen flex">
-  <div class="flex-1 flex items-center justify-center p-8 bg-white">
-    <div class="w-full max-w-md">
-      <app-button variant="ghost" className="mb-6" (clicked)="navigateBack()">
-        ← Back to Home
+<div class="min-h-screen flex bg-slate-50 dark:bg-dark-950 transition-colors duration-300">
+  <!-- Left Panel - Form -->
+  <div class="flex-1 flex items-center justify-center p-8 relative">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div
+        class="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary-500/5 via-transparent to-transparent rounded-full">
+      </div>
+    </div>
+
+    <div class="w-full max-w-md relative z-10">
+      <!-- Back Button -->
+      <app-button variant="ghost" className="mb-8 group" (clicked)="navigateBack()">
+        <span class="group-hover:-translate-x-1 transition-transform inline-block mr-2">←</span>
+        Back to Home
       </app-button>
 
-      <div class="flex items-center gap-2 mb-8">
-        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center">
-          <span class="text-white font-bold">5</span>
+      <!-- Logo -->
+      <div class="flex items-center gap-3 mb-10 group">
+        <div
+          class="w-14 h-14 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:scale-105 transition-transform">
+          <span class="text-white font-bold text-2xl">5</span>
         </div>
-        <span class="text-2xl font-medium text-slate-900">5alasly</span>
+        <span class="text-3xl font-bold text-slate-900 dark:text-white">5alasly</span>
       </div>
 
-      <h1 class="text-3xl font-bold text-slate-900 mb-2">
-        {{ isLogin() ? 'Welcome back' : 'Create your account' }}
+      <h1 class="text-4xl font-bold mb-3 text-slate-900 dark:text-white">
+        {{ isLogin() ? 'Welcome back' : 'Create account' }}
       </h1>
-      <p class="text-slate-600 mb-8">
-        {{ isLogin() ? 'Enter your credentials to access your account' : 'Join our community of helpers and seekers' }}
+      <p class="text-slate-600 dark:text-slate-400 mb-8 text-lg">
+        {{ isLogin() ? 'Enter your credentials to continue' : 'Join our community of helpers and seekers' }}
       </p>
 
       <!-- Error Message -->
       @if (errorMessage()) {
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-          {{ errorMessage() }}
-        </div>
+      <div
+        class="mb-6 p-4 rounded-xl flex items-center gap-3
+                    bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+        <span>⚠️</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
       }
 
-      <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="space-y-5">
         @if (!isLogin()) {
-          <div>
-            <label class="block text-sm font-medium text-slate-900 mb-1.5">Full Name</label>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">👤</span>
-              <input
-                formControlName="name"
-                type="text"
-                placeholder="Enter your full name"
-                class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">👤</span>
+            <input formControlName="name" type="text" placeholder="Enter your full name" class="input pl-12"
+              [class.border-red-500]="authForm.get('name')?.invalid && authForm.get('name')?.touched" />
           </div>
+          @if (authForm.get('name')?.invalid && authForm.get('name')?.touched) {
+          <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+            @if (authForm.get('name')?.errors?.['required']) { Name is required }
+            @else if (authForm.get('name')?.errors?.['minlength']) { Name must be at least 2 characters }
+            @else if (authForm.get('name')?.errors?.['maxlength']) { Name must be less than 50 characters }
+          </p>
+          }
+        </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-900 mb-1.5">Phone Number</label>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">📱</span>
-              <input
-                formControlName="phone"
-                type="tel"
-                placeholder="Enter your phone number"
-                class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">📱</span>
+            <input formControlName="phone" type="tel" placeholder="Enter your phone number" class="input pl-12"
+              [class.border-red-500]="authForm.get('phone')?.invalid && authForm.get('phone')?.touched" />
           </div>
+          @if (authForm.get('phone')?.invalid && authForm.get('phone')?.touched) {
+          <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+            @if (authForm.get('phone')?.errors?.['required']) { Phone number is required }
+            @else if (authForm.get('phone')?.errors?.['pattern']) { Enter a valid phone number (10-15 digits) }
+          </p>
+          }
+        </div>
         }
 
         <div>
-          <label class="block text-sm font-medium text-slate-900 mb-1.5">Email</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email</label>
           <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">✉️</span>
-            <input
-              formControlName="email"
-              type="email"
-              placeholder="Enter your email"
-              class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">✉️</span>
+            <input formControlName="email" type="email" placeholder="Enter your email" class="input pl-12"
+              [class.border-red-500]="authForm.get('email')?.invalid && authForm.get('email')?.touched" />
           </div>
+          @if (authForm.get('email')?.invalid && authForm.get('email')?.touched) {
+          <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+            @if (authForm.get('email')?.errors?.['required']) { Email is required }
+            @else if (authForm.get('email')?.errors?.['email']) { Enter a valid email address }
+          </p>
+          }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-900 mb-1.5">Password</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password</label>
           <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔒</span>
-            <input
-              formControlName="password"
-              type="password"
-              placeholder="Enter your password"
-              class="w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔒</span>
+            <input formControlName="password" type="password" placeholder="Enter your password" class="input pl-12"
+              [class.border-red-500]="authForm.get('password')?.invalid && authForm.get('password')?.touched" />
           </div>
+          @if (authForm.get('password')?.invalid && authForm.get('password')?.touched) {
+          <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+            @if (authForm.get('password')?.errors?.['required']) { Password is required }
+            @else if (authForm.get('password')?.errors?.['minlength']) { Password must be at least 8 characters }
+            @else if (authForm.get('password')?.errors?.['pattern']) { Password needs uppercase, lowercase, and a number
+            }
+          </p>
+          }
         </div>
 
-        <app-button
-          type="submit"
-          className="w-full h-12 rounded-xl"
-          [disabled]="!authForm.valid || isLoading()">
-          {{ isLoading() ? 'Please wait...' : (isLogin() ? 'Sign In' : 'Create Account') }}
+        <app-button type="submit" className="w-full h-14 text-lg" [disabled]="!authForm.valid || isLoading()">
+          @if (isLoading()) {
+          <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+          Processing...
+          } @else {
+          {{ isLogin() ? 'Sign In' : 'Create Account' }}
+          }
         </app-button>
       </form>
 
-      <p class="text-center mt-6 text-slate-600">
+      <p class="text-center mt-8 text-slate-600 dark:text-slate-400">
         {{ isLogin() ? "Don't have an account?" : 'Already have an account?' }}
-        <button (click)="toggleMode()" class="text-blue-600 hover:text-blue-700 font-medium ml-1">
+        <button (click)="toggleMode()"
+          class="text-primary-600 dark:text-primary-400 hover:text-primary-700 font-semibold ml-1 hover:underline">
           {{ isLogin() ? 'Sign up' : 'Sign in' }}
         </button>
       </p>
     </div>
   </div>
 
-  <div class="hidden lg:flex flex-1 bg-gradient-to-br from-blue-500 via-blue-600 to-orange-500 items-center justify-center p-12">
-    <div class="text-white text-center max-w-md">
-      <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl">
-        👥
-      </div>
-      <h2 class="text-3xl font-bold mb-4">Join our community</h2>
-      <p class="text-blue-100 text-lg">
-        Connect with trusted local helpers and get your tasks done quickly and safely.
-      </p>
+  <!-- Right Panel - Decorative -->
+  <div class="hidden lg:flex flex-1 relative overflow-hidden">
+    <div class="absolute inset-0 animated-gradient"></div>
+    <div
+      class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30">
+    </div>
 
-      <div class="mt-12 grid grid-cols-3 gap-4">
-        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-          <div class="text-2xl font-bold mb-1">10k+</div>
-          <div class="text-sm text-blue-100">Active Users</div>
+    <div class="relative z-10 flex items-center justify-center w-full p-12">
+      <div class="text-white text-center max-w-lg">
+        <!-- Floating Icon -->
+        <div class="w-24 h-24 mx-auto mb-8 rounded-3xl flex items-center justify-center text-5xl
+                    bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl
+                    animate-float">
+          👥
         </div>
-        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-          <div class="text-2xl font-bold mb-1">25k+</div>
-          <div class="text-sm text-blue-100">Tasks Done</div>
-        </div>
-        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-          <div class="text-2xl font-bold mb-1">4.8★</div>
-          <div class="text-sm text-blue-100">Avg Rating</div>
+
+        <h2 class="text-4xl font-bold mb-4">Join our community</h2>
+        <p class="text-white/80 text-xl mb-12">
+          Connect with trusted local helpers and get your tasks done quickly and safely.
+        </p>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
+            <div class="text-3xl font-bold mb-1">10k+</div>
+            <div class="text-sm text-white/70">Active Users</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
+            <div class="text-3xl font-bold mb-1">25k+</div>
+            <div class="text-sm text-white/70">Tasks Done</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
+            <div class="text-3xl font-bold mb-1">4.8★</div>
+            <div class="text-sm text-white/70">Avg Rating</div>
+          </div>
         </div>
       </div>
     </div>

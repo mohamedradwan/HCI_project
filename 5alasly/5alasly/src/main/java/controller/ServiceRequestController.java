@@ -1,6 +1,5 @@
 package controller;
 
-
 import dto.*;
 import service.ServiceRequestService;
 import lombok.RequiredArgsConstructor;
@@ -76,5 +75,41 @@ public class ServiceRequestController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ServiceRequestDTO> cancelRequest(
+            @PathVariable Long id,
+            @RequestHeader("User-Id") Long userId) {
+        try {
+            ServiceRequestDTO response = requestService.cancelRequest(id, userId);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/user/{userId}/completed")
+    public ResponseEntity<List<ServiceRequestDTO>> getCompletedRequestsByUser(@PathVariable Long userId) {
+        List<ServiceRequestDTO> requests = requestService.getCompletedRequestsByUser(userId);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/user/{userId}/in-progress")
+    public ResponseEntity<List<ServiceRequestDTO>> getInProgressRequestsByUser(@PathVariable Long userId) {
+        List<ServiceRequestDTO> requests = requestService.getInProgressRequestsByUser(userId);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/helper/{helperId}/accepted")
+    public ResponseEntity<List<ServiceRequestDTO>> getAcceptedTasksByHelper(@PathVariable Long helperId) {
+        List<ServiceRequestDTO> requests = requestService.getAcceptedTasksByHelper(helperId);
+        return ResponseEntity.ok(requests);
+    }
+
+    @GetMapping("/helper/{helperId}/completed")
+    public ResponseEntity<List<ServiceRequestDTO>> getCompletedTasksByHelper(@PathVariable Long helperId) {
+        List<ServiceRequestDTO> requests = requestService.getCompletedTasksByHelper(helperId);
+        return ResponseEntity.ok(requests);
     }
 }

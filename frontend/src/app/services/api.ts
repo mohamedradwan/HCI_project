@@ -85,6 +85,13 @@ export class ApiService {
     return this.http.get<UserStatsDTO>(`${this.baseUrl}/users/${id}/stats`);
   }
 
+  changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.put(`${this.baseUrl}/users/${userId}/password`, {
+      currentPassword,
+      newPassword
+    });
+  }
+
   // Service Request endpoints
   getAllOpenRequests(): Observable<ServiceRequestDTO[]> {
     return this.http.get<ServiceRequestDTO[]>(`${this.baseUrl}/requests`);
@@ -133,6 +140,39 @@ export class ApiService {
 
   getRequestsByCategory(category: string): Observable<ServiceRequestDTO[]> {
     return this.http.get<ServiceRequestDTO[]>(`${this.baseUrl}/requests/category/${category}`);
+  }
+
+  cancelRequest(requestId: number): Observable<ServiceRequestDTO> {
+    return this.http.post<ServiceRequestDTO>(
+      `${this.baseUrl}/requests/${requestId}/cancel`,
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getCompletedRequestsByUser(userId: number): Observable<ServiceRequestDTO[]> {
+    return this.http.get<ServiceRequestDTO[]>(`${this.baseUrl}/requests/user/${userId}/completed`);
+  }
+
+  getInProgressRequestsByUser(userId: number): Observable<ServiceRequestDTO[]> {
+    return this.http.get<ServiceRequestDTO[]>(`${this.baseUrl}/requests/user/${userId}/in-progress`);
+  }
+
+  // Tasks where user is the HELPER
+  getAcceptedTasksByHelper(helperId: number): Observable<ServiceRequestDTO[]> {
+    return this.http.get<ServiceRequestDTO[]>(`${this.baseUrl}/requests/helper/${helperId}/accepted`);
+  }
+
+  getCompletedTasksByHelper(helperId: number): Observable<ServiceRequestDTO[]> {
+    return this.http.get<ServiceRequestDTO[]>(`${this.baseUrl}/requests/helper/${helperId}/completed`);
+  }
+
+  uploadAvatar(userId: number, avatarUrl: string): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/users/${userId}/avatar`,
+      { avatarUrl },
+      { headers: this.getHeaders() }
+    );
   }
 }
 

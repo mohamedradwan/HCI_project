@@ -1,119 +1,185 @@
-<div class="min-h-screen">
-  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+<div class="min-h-screen bg-slate-50 dark:bg-dark-950 transition-colors duration-300">
+  <!-- Animated Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div
+      class="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-bl from-primary-500/10 via-transparent to-transparent dark:from-primary-500/5 rounded-full animate-pulse-slow">
+    </div>
+    <div
+      class="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-accent-500/10 via-transparent to-transparent dark:from-accent-500/5 rounded-full animate-pulse-slow"
+      style="animation-delay: 2s;"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="relative sticky top-0 z-50 border-b backdrop-blur-xl transition-all duration-300
+              bg-white/80 border-slate-200/50 dark:bg-dark-900/80 dark:border-dark-700/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <div class="flex items-center gap-2">
-          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center">
-            <span class="text-white font-bold">5</span>
+        <div class="flex items-center gap-3 group">
+          <div
+            class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all group-hover:scale-105">
+            <span class="text-white font-bold text-lg">5</span>
           </div>
-          <span class="text-slate-900 text-xl font-medium">5alasly</span>
+          <span class="text-slate-900 dark:text-white text-xl font-semibold">5alasly</span>
         </div>
         <div class="flex items-center gap-3">
+          <!-- Theme Toggle -->
+          <button (click)="toggleTheme()" class="p-2.5 rounded-xl transition-all duration-300 hover:scale-105
+                   bg-slate-100 dark:bg-dark-700 text-slate-600 dark:text-slate-300
+                   hover:bg-slate-200 dark:hover:bg-dark-600">
+            @if (themeService.isDarkMode()) {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            }
+          </button>
           @if (isLoggedIn()) {
-            <app-button (clicked)="navigate('home')">Dashboard</app-button>
+          <app-button (clicked)="navigate('home')">Dashboard</app-button>
           } @else {
-            <app-button variant="ghost" (clicked)="navigate('auth')">Login</app-button>
-            <app-button (clicked)="navigate('auth')">Sign Up</app-button>
+          <app-button variant="ghost" (clicked)="navigate('auth')">Login</app-button>
+          <app-button (clicked)="navigate('auth')">Sign Up</app-button>
           }
         </div>
       </div>
     </div>
   </nav>
 
-  <section class="bg-gradient-to-br from-blue-50 via-white to-orange-50 py-20 px-4">
-    <div class="max-w-6xl mx-auto text-center">
-      <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-6 border border-slate-200">
+  <!-- Hero Section -->
+  <section class="relative py-24 px-4 overflow-hidden">
+    <div class="max-w-6xl mx-auto text-center relative z-10">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 border
+                  bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border-slate-200 dark:border-dark-700
+                  shadow-lg shadow-slate-200/50 dark:shadow-none">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span class="text-slate-600 text-sm">Join 10,000+ active users</span>
+        <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Join 10,000+ active users</span>
       </div>
 
-      <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4 max-w-3xl mx-auto">
-        Your local helper, one click away
+      <!-- Heading with Gradient -->
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+        <span class="text-slate-900 dark:text-white">Your local helper,</span>
+        <br />
+        <span class="gradient-text">one click away</span>
       </h1>
 
-      <p class="text-slate-600 mb-8 max-w-2xl mx-auto text-lg">
+      <p class="text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto text-lg md:text-xl">
         Need help with something? Post a request and connect with trusted local service providers in your community.
       </p>
 
+      <!-- CTA Buttons -->
       <div class="flex flex-wrap justify-center gap-4">
-        <app-button
-          size="lg"
-          className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg"
-          (clicked)="navigate(isLoggedIn() ? 'create' : 'auth')">
-          Post a Request
+        <app-button size="lg" className="px-8" (clicked)="navigate(isLoggedIn() ? 'create' : 'auth')">
+          🚀 Post a Request
         </app-button>
-        <app-button
-          size="lg"
-          variant="outline"
-          className="rounded-xl border-2"
-          (clicked)="navigate(isLoggedIn() ? 'home' : 'auth')">
+        <app-button size="lg" variant="outline" className="px-8" (clicked)="navigate(isLoggedIn() ? 'home' : 'auth')">
           Browse Tasks
         </app-button>
+      </div>
+
+      <!-- Stats -->
+      <div class="flex flex-wrap justify-center gap-8 mt-16">
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">10k+</div>
+          <div class="text-slate-500 dark:text-slate-400 text-sm">Active Users</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">25k+</div>
+          <div class="text-slate-500 dark:text-slate-400 text-sm">Tasks Done</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">4.8★</div>
+          <div class="text-slate-500 dark:text-slate-400 text-sm">Avg Rating</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="py-16 px-4">
+  <!-- Categories Section -->
+  <section class="py-20 px-4 relative">
     <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-slate-900 mb-3">Popular Service Categories</h2>
-        <p class="text-slate-600">Find the help you need or offer your skills</p>
+      <div class="text-center mb-14">
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Popular Service Categories</h2>
+        <p class="text-slate-600 dark:text-slate-400 text-lg">Find the help you need or offer your skills</p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (category of categories; track category.name) {
-          <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all cursor-pointer group">
-            <div [class]="'w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-3xl group-hover:scale-110 transition-transform ' + category.color">
-              {{ category.icon }}
-            </div>
-            <h3 class="text-lg font-medium text-slate-900 mb-2">{{ category.name }}</h3>
-            <p class="text-slate-500 text-sm">{{ category.count }}</p>
+        <div class="group cursor-pointer p-6 rounded-2xl border transition-all duration-300
+                      bg-white dark:bg-dark-800 border-slate-200 dark:border-dark-700
+                      hover:shadow-2xl hover:shadow-primary-500/10 hover:border-primary-300 dark:hover:border-primary-700
+                      hover:-translate-y-1">
+          <div
+            [class]="'w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-3xl group-hover:scale-110 transition-transform ' + category.color">
+            {{ category.icon }}
           </div>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">{{ category.name }}</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">{{ category.count }}</p>
+        </div>
         }
       </div>
     </div>
   </section>
 
-  <section class="py-16 px-4 bg-white">
+  <!-- Features Section -->
+  <section class="py-20 px-4 bg-white dark:bg-dark-900 border-y border-slate-200 dark:border-dark-700">
     <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-slate-900 mb-3">Why Choose 5alasly?</h2>
-        <p class="text-slate-600">Join our trusted community of helpers and seekers</p>
+      <div class="text-center mb-14">
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Why Choose 5alasly?</h2>
+        <p class="text-slate-600 dark:text-slate-400 text-lg">Join our trusted community of helpers and seekers</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
         @for (feature of features; track feature.title) {
-          <div class="text-center">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-4xl">
-              {{ feature.icon }}
-            </div>
-            <h3 class="text-lg font-medium text-slate-900 mb-2">{{ feature.title }}</h3>
-            <p class="text-slate-600">{{ feature.description }}</p>
+        <div class="text-center group">
+          <div class="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center text-4xl
+                        bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900/50 dark:to-accent-900/50
+                        group-hover:scale-110 transition-transform shadow-lg shadow-primary-500/10">
+            {{ feature.icon }}
           </div>
+          <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-3">{{ feature.title }}</h3>
+          <p class="text-slate-600 dark:text-slate-400">{{ feature.description }}</p>
+        </div>
         }
       </div>
     </div>
   </section>
 
-  <section class="py-20 px-4 bg-gradient-to-br from-blue-600 to-orange-500">
-    <div class="max-w-4xl mx-auto text-center">
-      <h2 class="text-4xl font-bold text-white mb-4">Ready to get started?</h2>
-      <p class="text-blue-50 mb-8 text-lg">
+  <!-- CTA Section -->
+  <section class="py-24 px-4 relative overflow-hidden">
+    <div class="absolute inset-0 animated-gradient opacity-90"></div>
+    <div
+      class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30">
+    </div>
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Ready to get started?</h2>
+      <p class="text-white/80 mb-10 text-xl">
         Join thousands of users who are already getting and giving help in their community
       </p>
-      <app-button
-        size="lg"
-        variant="secondary"
-        className="rounded-xl shadow-lg"
+      <app-button size="lg" variant="secondary" className="px-10 shadow-2xl hover:scale-105"
         (clicked)="navigate('auth')">
-        Get Started Free
+        Get Started Free →
       </app-button>
     </div>
   </section>
 
-  <footer class="bg-slate-900 text-slate-300 py-12 px-4">
-    <div class="max-w-7xl mx-auto text-center text-sm">
-      <p>© 2025 5alasly. All rights reserved.</p>
+  <!-- Footer -->
+  <footer class="py-12 px-4 bg-dark-900 dark:bg-dark-950 text-slate-400 border-t border-dark-700">
+    <div class="max-w-7xl mx-auto text-center">
+      <div class="flex items-center justify-center gap-2 mb-6">
+        <div
+          class="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-sm">5</span>
+        </div>
+        <span class="text-white font-semibold">5alasly</span>
+      </div>
+      <p class="text-sm">© 2025 5alasly. All rights reserved.</p>
     </div>
   </footer>
 </div>

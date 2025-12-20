@@ -46,6 +46,20 @@ export const routes: Routes = [
       .then(m => m.UserProfileComponent)
   },
   {
+    path: 'user',
+    title: 'User Profile | 5alasly',
+    data: { key: 'user' },
+    loadComponent: () => import('./components/public-profile/public-profile.component')
+      .then(m => m.PublicProfileComponent)
+  },
+  {
+    path: 'settings',
+    title: 'Settings | 5alasly',
+    data: { key: 'settings' },
+    loadComponent: () => import('./components/settings/settings.component')
+      .then(m => m.SettingsComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

@@ -1,168 +1,344 @@
-<div class="min-h-screen bg-slate-50">
+<div class="min-h-screen bg-slate-50 dark:bg-dark-950 transition-colors duration-300">
   <app-nav-bar [currentScreen]="'create'" />
 
   <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900 mb-2">Create Service Request</h1>
-      <p class="text-slate-600">Fill in the details to post your request</p>
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Create Service Request</h1>
+      <p class="text-slate-600 dark:text-slate-400">Fill in the details to post your request</p>
     </div>
 
     <!-- Progress Bar -->
-    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm mb-6">
+    <div class="card p-8 mb-6">
       <div class="flex items-center justify-between relative">
-        <div class="absolute top-6 left-0 right-0 h-1 bg-slate-200 -z-10">
-          <div class="h-full bg-blue-600 transition-all" [style.width.%]="progressWidth()"></div>
+        <div class="absolute top-6 left-0 right-0 h-1 bg-slate-200 dark:bg-dark-700 -z-10">
+          <div class="h-full bg-gradient-to-r from-primary-600 to-primary-500 transition-all"
+            [style.width.%]="progressWidth()"></div>
         </div>
 
         @for (step of steps; track step.number) {
-          <div class="flex flex-col items-center">
-            <div [ngClass]="{
-              'bg-blue-600 text-white shadow-lg': currentStep() >= step.number,
-              'bg-white border-2 border-slate-300 text-slate-400': currentStep() < step.number
+        <div class="flex flex-col items-center">
+          <div [ngClass]="{
+              'bg-gradient-to-br from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/25': currentStep() >= step.number,
+              'bg-white dark:bg-dark-800 border-2 border-slate-300 dark:border-dark-600 text-slate-400 dark:text-dark-400': currentStep() < step.number
             }" class="w-12 h-12 rounded-full flex items-center justify-center transition-all z-10 font-medium">
-              @if (currentStep() > step.number) {
-                <span>✓</span>
-              } @else {
-                <span>{{ step.number }}</span>
-              }
-            </div>
-            <p [ngClass]="currentStep() >= step.number ? 'text-slate-900' : 'text-slate-500'"
-               class="mt-2 text-sm font-medium">
-              {{ step.title }}
-            </p>
+            @if (currentStep() > step.number) {
+            <span>✓</span>
+            } @else {
+            <span>{{ step.number }}</span>
+            }
           </div>
+          <p [ngClass]="currentStep() >= step.number ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-500'"
+            class="mt-2 text-sm font-medium">
+            {{ step.title }}
+          </p>
+        </div>
         }
       </div>
     </div>
 
     <!-- Form -->
-    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+    <div class="card p-8">
       <!-- Error Message -->
       @if (errorMessage()) {
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-          {{ errorMessage() }}
-        </div>
+      <div
+        class="mb-4 p-4 rounded-xl flex items-center gap-3
+                  bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+        <span>⚠️</span>
+        {{ errorMessage() }}
+      </div>
       }
 
       <form [formGroup]="requestForm">
         <!-- Step 1: Basic Info -->
         @if (currentStep() === 1) {
-          <div class="space-y-6">
-            <div>
-              <label class="block text-sm font-medium text-slate-900 mb-2">Request Title *</label>
-              <input formControlName="title"
-                     placeholder="e.g., Need help moving furniture"
-                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-900 mb-2">Category *</label>
-              <select formControlName="category"
-                      class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Select a category</option>
-                @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ cat }}</option>
-                }
-              </select>
-            </div>
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Request Title *</label>
+            <input formControlName="title" placeholder="e.g., Need help moving furniture" class="input"
+              [class.border-red-500]="requestForm.get('title')?.invalid && requestForm.get('title')?.touched" />
+            @if (requestForm.get('title')?.invalid && requestForm.get('title')?.touched) {
+            <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+              @if (requestForm.get('title')?.errors?.['required']) { Title is required }
+              @else if (requestForm.get('title')?.errors?.['minlength']) { Title must be at least 10 characters }
+              @else if (requestForm.get('title')?.errors?.['maxlength']) { Title must be less than 100 characters }
+            </p>
+            }
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category *</label>
+            <select formControlName="category" class="input"
+              [class.border-red-500]="requestForm.get('category')?.invalid && requestForm.get('category')?.touched">
+              <option value="">Select a category</option>
+              @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+            @if (requestForm.get('category')?.invalid && requestForm.get('category')?.touched) {
+            <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">Please select a category</p>
+            }
+          </div>
+        </div>
         }
 
         <!-- Step 2: Details -->
         @if (currentStep() === 2) {
-          <div class="space-y-6">
-            <div>
-              <label class="block text-sm font-medium text-slate-900 mb-2">Description *</label>
-              <textarea formControlName="description"
-                        rows="6"
-                        placeholder="Describe what help you need in detail..."
-                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-              </textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-900 mb-2">Budget *</label>
-              <input formControlName="budget"
-                     placeholder="e.g., $25 or $30/hr"
-                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div class="flex items-center gap-2">
-              <input type="checkbox" formControlName="urgent" id="urgent" class="w-4 h-4" />
-              <label for="urgent" class="text-sm text-slate-700">Mark as urgent</label>
-            </div>
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description *</label>
+            <textarea formControlName="description" rows="6" placeholder="Describe what help you need in detail..."
+              class="input resize-none"
+              [class.border-red-500]="requestForm.get('description')?.invalid && requestForm.get('description')?.touched"></textarea>
+            @if (requestForm.get('description')?.invalid && requestForm.get('description')?.touched) {
+            <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+              @if (requestForm.get('description')?.errors?.['required']) { Description is required }
+              @else if (requestForm.get('description')?.errors?.['minlength']) { Description must be at least 20
+              characters }
+              @else if (requestForm.get('description')?.errors?.['maxlength']) { Description must be less than 1000
+              characters }
+            </p>
+            }
           </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Budget *</label>
+            <input formControlName="budget" placeholder="e.g., $25 or $30/hr" class="input"
+              [class.border-red-500]="requestForm.get('budget')?.invalid && requestForm.get('budget')?.touched" />
+            @if (requestForm.get('budget')?.invalid && requestForm.get('budget')?.touched) {
+            <p class="mt-1.5 text-sm text-red-500 dark:text-red-400">
+              @if (requestForm.get('budget')?.errors?.['required']) { Budget is required }
+              @else if (requestForm.get('budget')?.errors?.['pattern']) { Budget must be a number (e.g., 25 or 30.50) }
+            </p>
+            }
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input type="checkbox" formControlName="urgent" id="urgent"
+              class="w-5 h-5 rounded border-slate-300 dark:border-dark-600 text-primary-600 focus:ring-primary-500 dark:bg-dark-800" />
+            <label for="urgent" class="text-sm text-slate-700 dark:text-slate-300">🔥 Mark as urgent</label>
+          </div>
+        </div>
         }
 
         <!-- Step 3: Location & Time -->
         @if (currentStep() === 3) {
-          <div class="space-y-6">
-            <div>
-              <label class="block text-sm font-medium text-slate-900 mb-2">Location *</label>
-              <input formControlName="location"
-                     placeholder="Enter address or area"
-                     class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+        <div class="space-y-6">
+          <div class="space-y-4">
+            <label class="block text-sm font-medium text-slate-900">📍 Service Location</label>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-slate-900 mb-2">Date *</label>
-                <input formControlName="date" type="date"
-                       class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <!-- Location Trigger / Preview Card -->
+            <div (click)="openMapModal()"
+              class="group relative overflow-hidden border-2 border-dashed rounded-2xl p-5 cursor-pointer transition-all duration-300"
+              [ngClass]="{
+                'border-slate-300 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50': !selectedAddress(),
+                'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50': selectedAddress()
+              }">
+
+              <!-- Decorative Background -->
+              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-200/30 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-10 -left-10 w-24 h-24 bg-indigo-200/30 rounded-full blur-2xl"></div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-900 mb-2">Time *</label>
-                <input formControlName="time" type="time"
-                       class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+              <div class="relative flex items-center gap-4">
+                <!-- Icon -->
+                <div
+                  class="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300"
+                  [ngClass]="{
+                    'bg-slate-100 group-hover:bg-blue-100': !selectedAddress(),
+                    'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200': selectedAddress()
+                  }">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    [ngClass]="{'text-slate-400 group-hover:text-blue-500': !selectedAddress(), 'text-white': selectedAddress()}">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  @if (selectedAddress()) {
+                  <p class="font-semibold text-slate-900 truncate">{{ selectedAddress()?.display }}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    @if (selectedAddress()?.city) {
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      {{ selectedAddress()?.city }}
+                    </span>
+                    }
+                    @if (selectedAddress()?.country) {
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                      {{ selectedAddress()?.country }}
+                    </span>
+                    }
+                  </div>
+                  } @else {
+                  <p class="font-medium text-slate-700 group-hover:text-blue-600 transition-colors">Tap to select
+                    location</p>
+                  <p class="text-sm text-slate-400">Search or tap on the map</p>
+                  }
+                </div>
+
+                <!-- Arrow -->
+                <div
+                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+                  [ngClass]="{
+                    'bg-slate-100 text-slate-400 group-hover:bg-blue-500 group-hover:text-white group-hover:translate-x-1': !selectedAddress(),
+                    'bg-white/80 text-blue-600': selectedAddress()
+                  }">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Beautiful Map Modal -->
+          @if (isMapModalOpen()) {
+          <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+            <div class="bg-white rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl transform transition-all">
+
+              <!-- Gradient Header -->
+              <div class="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-5">
+                <div
+                  class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30">
+                </div>
+                <div class="relative flex justify-between items-center">
+                  <div>
+                    <h3 class="text-xl font-bold text-white">Select Location</h3>
+                    <p class="text-blue-100 text-sm mt-0.5">Tap on the map to pin your location</p>
+                  </div>
+                  <button type="button" (click)="closeMapModal()"
+                    class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.5">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Map Container -->
+              <div class="relative h-[400px] bg-slate-100">
+                <div id="map" class="absolute inset-0"></div>
+
+                <!-- Loading overlay for address -->
+                @if (isLoadingAddress()) {
+                <div
+                  class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg flex items-center gap-3">
+                  <div class="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span class="text-sm text-slate-600">Finding address...</span>
+                </div>
+                }
+
+                <!-- Selected Address Preview -->
+                @if (selectedAddress() && !isLoadingAddress()) {
+                <div
+                  class="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-slate-100">
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-md shadow-green-200">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="white" stroke-width="2">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-semibold text-slate-900 truncate">{{ selectedAddress()?.display }}</p>
+                      <p class="text-xs text-slate-400 mt-0.5">{{ selectedAddress()?.coordinates }}</p>
+                    </div>
+                  </div>
+                </div>
+                }
+              </div>
+
+              <!-- Action Footer -->
+              <div
+                class="px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200 flex justify-between items-center">
+                <p class="text-sm text-slate-500">
+                  @if (selectedAddress()) {
+                  <span class="text-green-600 font-medium">✓ Location selected</span>
+                  } @else {
+                  Tap on the map to select
+                  }
+                </p>
+                <div class="flex gap-3">
+                  <button type="button" (click)="closeMapModal()"
+                    class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200">
+                    Cancel
+                  </button>
+                  <button type="button" (click)="confirmLocation()" [disabled]="!selectedAddress()"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-white transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    [ngClass]="{
+                        'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-300 hover:shadow-blue-400 hover:scale-105': selectedAddress(),
+                        'bg-slate-300': !selectedAddress()
+                      }">
+                    Confirm Location
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Date *</label>
+              <input formControlName="date" type="date"
+                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-900 mb-2">Time *</label>
+              <input formControlName="time" type="time"
+                class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        </div>
         }
 
         <!-- Step 4: Review -->
         @if (currentStep() === 4) {
-          <div class="space-y-4">
-            <div class="text-center mb-6">
-              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">✓</div>
-              <h2 class="text-2xl font-bold text-slate-900 mb-2">Review Your Request</h2>
-              <p class="text-slate-600">Make sure all details are correct</p>
+        <div class="space-y-4">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">✓
             </div>
-
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-600 mb-1">Title</p>
-              <p class="text-slate-900">{{ requestForm.value.title || 'Not set' }}</p>
-            </div>
-
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-600 mb-1">Category</p>
-              <p class="text-slate-900">{{ requestForm.value.category || 'Not set' }}</p>
-            </div>
-
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-600 mb-1">Budget</p>
-              <p class="text-slate-900">{{ requestForm.value.budget || 'Not set' }}</p>
-            </div>
-
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-600 mb-1">Location</p>
-              <p class="text-slate-900">{{ requestForm.value.location || 'Not set' }}</p>
-            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Review Your Request</h2>
+            <p class="text-slate-600">Make sure all details are correct</p>
           </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-sm text-slate-600 mb-1">Title</p>
+            <p class="text-slate-900">{{ requestForm.value.title || 'Not set' }}</p>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-sm text-slate-600 mb-1">Category</p>
+            <p class="text-slate-900">{{ requestForm.value.category || 'Not set' }}</p>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-sm text-slate-600 mb-1">Budget</p>
+            <p class="text-slate-900">{{ requestForm.value.budget || 'Not set' }}</p>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <p class="text-sm text-slate-600 mb-1">Location</p>
+            <p class="text-slate-900">{{ requestForm.value.location || 'Not set' }}</p>
+          </div>
+        </div>
         }
 
         <!-- Navigation Buttons -->
         <div class="flex justify-between mt-8 pt-6 border-t border-slate-200">
-          <app-button
-            variant="outline"
-            className="rounded-xl"
-            [disabled]="isSubmitting()"
+          <app-button variant="outline" className="rounded-xl" [disabled]="isSubmitting()"
             (clicked)="currentStep() === 1 ? navigate('home') : prevStep()">
             {{ currentStep() === 1 ? 'Cancel' : 'Back' }}
           </app-button>
-          <app-button
-            className="rounded-xl min-w-[120px]"
-            [disabled]="isSubmitting()"
-            (clicked)="nextStep()">
+          <app-button className="rounded-xl min-w-[120px]" [disabled]="isSubmitting()" (clicked)="nextStep()">
             {{ isSubmitting() ? 'Posting...' : (currentStep() === 4 ? 'Post Request' : 'Next') }}
           </app-button>
         </div>

@@ -23,11 +23,12 @@ export class AuthScreenComponent {
   isLoading = signal(false);
 
   constructor() {
+    // Login mode starts with minimal validation
     this.authForm = this.fb.group({
       name: [''],
       phone: [''],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      email: ['', [Validators.required]],
+      password: ['', [Validators.required]]
     });
   }
 
@@ -36,13 +37,22 @@ export class AuthScreenComponent {
     this.errorMessage.set('');
 
     if (!this.isLogin()) {
-      this.authForm.get('name')?.setValidators([Validators.required]);
-      this.authForm.get('phone')?.setValidators([Validators.required]);
+      // Signup mode - add all validators
+      this.authForm.get('name')?.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(50)]);
+      this.authForm.get('phone')?.setValidators([Validators.required, Validators.pattern(/^[0-9]{10,15}$/)]);
+      this.authForm.get('email')?.setValidators([Validators.required, Validators.email]);
+      this.authForm.get('password')?.setValidators([Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)]);
     } else {
+      // Login mode - minimal validators (just required)
       this.authForm.get('name')?.clearValidators();
       this.authForm.get('phone')?.clearValidators();
+      this.authForm.get('email')?.setValidators([Validators.required]);
+      this.authForm.get('password')?.setValidators([Validators.required]);
     }
-    this.authForm.updateValueAndValidity();
+    this.authForm.get('name')?.updateValueAndValidity();
+    this.authForm.get('phone')?.updateValueAndValidity();
+    this.authForm.get('email')?.updateValueAndValidity();
+    this.authForm.get('password')?.updateValueAndValidity();
   }
 
   async onSubmit(): Promise<void> {
