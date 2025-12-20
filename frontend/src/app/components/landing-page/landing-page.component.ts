@@ -37,6 +37,10 @@ export class LandingPageComponent {
     this.router.navigate([`/${screen}`]);
   }
 
+  navigateToSignup(): void {
+    this.router.navigate(['/auth'], { queryParams: { mode: 'signup' } });
+  }
+
   toggleTheme(): void {
     this.themeService.toggle();
   }

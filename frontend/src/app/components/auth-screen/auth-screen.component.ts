@@ -1,6 +1,6 @@
 // auth-screen.component.ts
-import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -35,8 +35,9 @@ const customIcon = L.icon({
     }
   `]
 })
-export class AuthScreenComponent {
+export class AuthScreenComponent implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
 
@@ -59,6 +60,15 @@ export class AuthScreenComponent {
       email: ['', [Validators.required]],
       password: ['', [Validators.required]],
       paypalEmail: ['']
+    });
+  }
+
+  ngOnInit() {
+    // Check for mode=signup query param
+    this.route.queryParams.subscribe(params => {
+      if (params['mode'] === 'signup') {
+        this.toggleMode(); // Switch to signup mode
+      }
     });
   }
 
