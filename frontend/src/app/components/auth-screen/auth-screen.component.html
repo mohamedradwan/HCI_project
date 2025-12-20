@@ -237,3 +237,46 @@
     </div>
   </div>
 </div>
+
+<!-- Map Modal -->
+@if (showMapModal()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-primary-500 to-accent-500 p-4 flex items-center justify-between">
+      <h2 class="text-xl font-bold text-white">📍 Pick Your Location</h2>
+      <button (click)="closeMapModal()" class="text-white/80 hover:text-white text-2xl">&times;</button>
+    </div>
+
+    <!-- Map Container -->
+    <div class="h-[400px] w-full">
+      <div id="signup-map" class="h-full w-full"></div>
+    </div>
+
+    <!-- Address Preview -->
+    <div class="p-4 border-t border-slate-200 dark:border-dark-700">
+      @if (isLoadingAddress()) {
+      <div class="flex items-center gap-2 text-slate-500">
+        <div class="w-4 h-4 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin"></div>
+        <span>Getting address...</span>
+      </div>
+      } @else if (tempAddress()) {
+      <div class="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+        <span class="text-xl">📍</span>
+        <span class="font-medium">{{ tempAddress() }}</span>
+      </div>
+      } @else {
+      <p class="text-slate-400 dark:text-slate-500 italic">Click on the map to select a location</p>
+      }
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="flex justify-end gap-3 p-4 bg-slate-50 dark:bg-dark-700">
+      <app-button variant="ghost" (clicked)="closeMapModal()">Cancel</app-button>
+      <app-button [disabled]="!tempAddress()" (clicked)="confirmLocation()">
+        ✓ Confirm Location
+      </app-button>
+    </div>
+  </div>
+</div>
+}

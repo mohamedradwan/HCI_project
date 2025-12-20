@@ -40,12 +40,16 @@
                             className="w-32 h-32 border-4 border-white dark:border-dark-800 shadow-lg text-3xl" />
                         }
                         <!-- Upload Overlay -->
+                        @if (isOwnProfile()) {
                         <label
                             class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                             <span class="text-white text-2xl">📷</span>
                             <input type="file" accept="image/*" class="hidden" (change)="onAvatarChange($event)" />
                         </label>
+                        }
                     </div>
+
+                    @if (isOwnProfile()) {
                     <div class="mt-20 flex gap-3">
                         <app-button variant="outline" className="rounded-xl" (clicked)="navigate('create')">
                             ➕ Create Request
@@ -54,6 +58,13 @@
                             🚪 Logout
                         </app-button>
                     </div>
+                    } @else {
+                    <div class="mt-20 flex gap-3">
+                        <app-button variant="default" className="rounded-xl">
+                            💬 Message
+                        </app-button>
+                    </div>
+                    }
                 </div>
 
                 <!-- User Info -->
@@ -141,8 +152,9 @@
         </div>
         }
 
-        <!-- Tabs -->
+        <!-- Tabs - Only show profile owner's private tabs if viewing own profile -->
         <div class="card p-6">
+            @if (isOwnProfile()) {
             <div class="flex gap-2 mb-6 border-b border-slate-200 dark:border-dark-700 pb-4">
                 <button (click)="setActiveTab('my-requests')"
                     [ngClass]="activeTab() === 'my-requests' ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700'"
@@ -165,6 +177,15 @@
                     🤝 Helped ({{ helperCompletedTasks().length }})
                 </button>
             </div>
+            } @else {
+            <!-- Visitor View: Only show public requests -->
+            <div class="flex gap-2 mb-6 border-b border-slate-200 dark:border-dark-700 pb-4">
+                <button
+                    class="px-4 py-2 rounded-lg font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400">
+                    📋 Posted Requests ({{ userRequests().length }})
+                </button>
+            </div>
+            }
 
             <!-- My Requests Tab -->
             @if (activeTab() === 'my-requests') {
@@ -201,7 +222,7 @@
                                 <span>📅 {{ request.date }}</span>
                             </div>
                         </div>
-                        @if (request.status === 'OPEN' || request.status === 'IN_PROGRESS') {
+                        @if (isOwnProfile() && (request.status === 'OPEN' || request.status === 'IN_PROGRESS')) {
                         <app-button variant="danger" size="sm" (clicked)="cancelRequest(request.id!, $event)">
                             Cancel
                         </app-button>
@@ -214,7 +235,7 @@
             }
 
             <!-- In Progress Tab -->
-            @if (activeTab() === 'in-progress') {
+            @if (isOwnProfile() && activeTab() === 'in-progress') {
             @if (inProgressRequests().length === 0) {
             <div class="text-center py-8">
                 <div
@@ -242,7 +263,7 @@
             }
 
             <!-- Completed Tab -->
-            @if (activeTab() === 'completed') {
+            @if (isOwnProfile() && activeTab() === 'completed') {
             @if (completedRequests().length === 0) {
             <div class="text-center py-8">
                 <div
@@ -271,7 +292,7 @@
             }
 
             <!-- Helped Tab (Tasks where user was helper) -->
-            @if (activeTab() === 'helped') {
+            @if (isOwnProfile() && activeTab() === 'helped') {
             @if (helperCompletedTasks().length === 0) {
             <div class="text-center py-8">
                 <div

@@ -5,12 +5,35 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { AuthService } from '../../services/auth.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { NgIf, NgClass } from '@angular/common';
+import * as L from 'leaflet';
+
+// Custom marker icon to fix default icon issue
+const customIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 @Component({
   selector: 'app-auth-screen',
   standalone: true,
   imports: [ButtonComponent, ReactiveFormsModule, NgIf, NgClass],
-  templateUrl: './auth-screen.component.html'
+  templateUrl: './auth-screen.component.html',
+  styles: [`
+    #signup-map {
+      height: 100%;
+      width: 100%;
+      display: block;
+      z-index: 1;
+    }
+    .leaflet-container {
+      font-family: inherit;
+    }
+  `]
 })
 export class AuthScreenComponent {
   private router = inject(Router);
@@ -144,37 +167,125 @@ export class AuthScreenComponent {
     }
   }
 
-  // Opens a simple address input method using browser geolocation
+  // Map modal state
+  private map: L.Map | undefined;
+  private marker: L.Marker | undefined;
+  tempAddress = signal<string | null>(null);
+  tempLat = signal<number | null>(null);
+  tempLng = signal<number | null>(null);
+  isLoadingAddress = signal(false);
+
+  // Opens the map picker modal
   openAddressModal(): void {
-    // Use browser geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.selectedLatitude.set(position.coords.latitude);
-          this.selectedLongitude.set(position.coords.longitude);
-          // Reverse geocode to get address (simplified - just show coordinates for now)
-          this.selectedAddress.set(`Near ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
-        },
-        (error) => {
-          console.warn('Geolocation error:', error);
-          // Fallback: let user type address manually
-          const address = prompt('Enter your address (we couldn\'t detect your location):');
-          if (address) {
-            this.selectedAddress.set(address);
-            // Use Cairo center as default coordinates for Egypt
-            this.selectedLatitude.set(30.0444);
-            this.selectedLongitude.set(31.2357);
-          }
+    this.showMapModal.set(true);
+    // Initialize map after modal is visible
+    setTimeout(() => {
+      this.initMap();
+    }, 100);
+  }
+
+  closeMapModal(): void {
+    this.showMapModal.set(false);
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+      this.marker = undefined;
+    }
+    this.tempAddress.set(null);
+    this.tempLat.set(null);
+    this.tempLng.set(null);
+  }
+
+  private initMap(): void {
+    if (this.map) return;
+
+    // Default: Cairo center
+    const lat = 30.0444;
+    const lng = 31.2357;
+
+    this.map = L.map('signup-map').setView([lat, lng], 12);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(this.map);
+
+    this.map.on('click', (e: L.LeafletMouseEvent) => {
+      this.updateMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Try to center on user's location
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        if (this.map) {
+          this.map.setView([position.coords.latitude, position.coords.longitude], 14);
         }
+      });
+    }
+  }
+
+  private placeMarker(lat: number, lng: number): void {
+    if (!this.map) return;
+
+    if (this.marker) {
+      this.map.removeLayer(this.marker);
+    }
+
+    this.marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map);
+  }
+
+  private async updateMarker(lat: number, lng: number) {
+    if (!this.map) return;
+
+    this.placeMarker(lat, lng);
+    this.isLoadingAddress.set(true);
+
+    try {
+      // Reverse geocoding
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
       );
-    } else {
-      // Fallback for browsers without geolocation
-      const address = prompt('Enter your address:');
-      if (address) {
-        this.selectedAddress.set(address);
-        this.selectedLatitude.set(30.0444);
-        this.selectedLongitude.set(31.2357);
+      const data = await response.json();
+
+      if (data && data.address) {
+        const addr = data.address;
+        const street = addr.road || addr.pedestrian || addr.street || '';
+        const neighborhood = addr.neighbourhood || addr.suburb || addr.quarter || '';
+        const city = addr.city || addr.town || addr.village || addr.county || '';
+
+        let displayParts: string[] = [];
+        if (street) displayParts.push(street);
+        if (neighborhood) displayParts.push(neighborhood);
+        if (city) displayParts.push(city);
+
+        const address = displayParts.length > 0 ? displayParts.join(', ') : data.display_name;
+
+        this.tempAddress.set(address);
+        this.tempLat.set(lat);
+        this.tempLng.set(lng);
+      } else {
+        this.tempAddress.set(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+        this.tempLat.set(lat);
+        this.tempLng.set(lng);
       }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      this.tempAddress.set(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      this.tempLat.set(lat);
+      this.tempLng.set(lng);
+    } finally {
+      this.isLoadingAddress.set(false);
+    }
+  }
+
+  confirmLocation(): void {
+    if (this.tempAddress() && this.tempLat() && this.tempLng()) {
+      this.selectedAddress.set(this.tempAddress());
+      this.selectedLatitude.set(this.tempLat());
+      this.selectedLongitude.set(this.tempLng());
+      this.closeMapModal();
     }
   }
 }
