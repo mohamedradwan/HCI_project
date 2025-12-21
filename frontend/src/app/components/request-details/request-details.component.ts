@@ -152,6 +152,28 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
+
+  startChat(): void {
+    const req = this.request();
+    const currentUserId = this.authService.getCurrentUserId();
+
+    if (!req || !currentUserId) {
+      this.router.navigate(['/auth']);
+      return;
+    }
+
+    // Determine if the recipient is the owner or the assigned helper
+    const recipientId = this.isOwner() ? req.helperId : req.userId;
+
+    if (recipientId) {
+      this.router.navigate(['/chat'], {
+        queryParams: { recipientId: recipientId }
+      });
+    } else {
+      this.error.set('No recipient available for chat.');
+    }
+  }
+
   formatDate(dateStr: string): string {
     if (!dateStr) return 'Not set';
     try {

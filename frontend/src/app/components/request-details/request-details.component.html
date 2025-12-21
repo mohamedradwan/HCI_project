@@ -235,9 +235,9 @@
                             class="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold transition-colors disabled:opacity-50">
                             {{ isCompleting() ? 'Completing...' : '✅ Mark as Complete' }}
                         </button>
-                        <button
+                        <button (click)="startChat()"
                             class="w-full py-3 rounded-xl border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-800 transition-colors">
-                            💬 Contact Owner
+                            💬 Contact User
                         </button>
                     </div>
                     } @else {

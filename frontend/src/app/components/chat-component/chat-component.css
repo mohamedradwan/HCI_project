@@ -1,0 +1,16 @@
+.chat-container {
+    max-height: calc(100vh - 80px);
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-8px);
+    }
+}
