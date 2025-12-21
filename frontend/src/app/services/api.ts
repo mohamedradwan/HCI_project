@@ -64,6 +64,36 @@ export interface UserStatsDTO {
   avgRating: number;
 }
 
+export interface CreateServiceOfferingDTO {
+  title: string;
+  category: string;
+  description: string;
+  price: string;
+}
+
+export interface ServiceOfferingDTO {
+  id: number;
+  userId: number;
+  userName: string;
+  userAvatar: string;
+  title: string;
+  category: string;
+  description: string;
+  price: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ProviderStatsDTO {
+  activeServices: number;
+  totalEarnings: number;
+  avgRating: number;
+  totalReviews: number;
+  completedTasksMonth: number;
+  earningsHistory: Record<string, number>;
+  categoryStats: Record<string, number>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -212,6 +242,53 @@ export class ApiService {
       { avatarUrl },
       { headers: this.getHeaders() }
     );
+  }
+
+  // Notification endpoints
+  getNotifications(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/notifications`, { headers: this.getHeaders() });
+  }
+
+  getUnreadCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.baseUrl}/notifications/unread-count`, { headers: this.getHeaders() });
+  }
+
+  markNotificationAsRead(notificationId: number): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/notifications/${notificationId}/read`, {}, { headers: this.getHeaders() });
+  }
+
+  markAllNotificationsAsRead(): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/notifications/read-all`, {}, { headers: this.getHeaders() });
+  }
+
+  deleteNotification(notificationId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/notifications/${notificationId}`, { headers: this.getHeaders() });
+  }
+
+  // Advanced search endpoint
+  searchRequestsWithFilters(filters: any): Observable<ServiceRequestDTO[]> {
+    return this.http.post<ServiceRequestDTO[]>(`${this.baseUrl}/requests/search`, filters);
+  }
+
+  // Service Offering endpoints
+  createServiceOffering(userId: number, data: CreateServiceOfferingDTO): Observable<ServiceOfferingDTO> {
+    return this.http.post<ServiceOfferingDTO>(`${this.baseUrl}/offerings/user/${userId}`, data);
+  }
+
+  getOfferingsByUser(userId: number): Observable<ServiceOfferingDTO[]> {
+    return this.http.get<ServiceOfferingDTO[]>(`${this.baseUrl}/offerings/user/${userId}`);
+  }
+
+  getAllActiveOfferings(): Observable<ServiceOfferingDTO[]> {
+    return this.http.get<ServiceOfferingDTO[]>(`${this.baseUrl}/offerings/active`);
+  }
+
+  deleteOffering(id: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/offerings/${id}/user/${userId}`);
+  }
+
+  getProviderStats(userId: number): Observable<ProviderStatsDTO> {
+    return this.http.get<ProviderStatsDTO>(`${this.baseUrl}/offerings/user/${userId}/stats`);
   }
 }
 

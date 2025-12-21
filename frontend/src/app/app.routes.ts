@@ -69,6 +69,13 @@ export const routes: Routes = [
         .then(m => m.ChatComponent)
   },
   {
+    path: 'admin-dashboard',
+    title: 'Admin Dashboard | 5alasly',
+    data: { key: 'admin' },
+    loadComponent: () => import('./components/admin-dashboard/admin-dashboard')
+      .then(m => m.AdminDashboardComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

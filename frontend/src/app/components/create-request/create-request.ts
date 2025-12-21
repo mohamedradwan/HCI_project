@@ -45,6 +45,7 @@ export class CreateRequestComponent {
   private marker: L.Marker | undefined;
 
   currentStep = signal(1);
+  mode = signal<'request' | 'offering' | null>(null);
   requestForm: FormGroup;
   isSubmitting = signal(false);
   errorMessage = signal('');
@@ -59,26 +60,57 @@ export class CreateRequestComponent {
   } | null>(null);
   isLoadingAddress = signal(false);
 
-  steps = [
-    { number: 1, title: 'Basic Info' },
-    { number: 2, title: 'Details' },
-    { number: 3, title: 'Location & Time' },
-    { number: 4, title: 'Review' }
-  ];
+  steps = computed(() => {
+    const baseSteps = [
+      { number: 1, title: 'I want to...' }
+    ];
+    
+    if (this.mode() === 'request') {
+      return [
+        ...baseSteps,
+        { number: 2, title: 'Basic Info' },
+        { number: 3, title: 'Details' },
+        { number: 4, title: 'Location & Time' },
+        { number: 5, title: 'Review' }
+      ];
+    } else if (this.mode() === 'offering') {
+      return [
+        ...baseSteps,
+        { number: 2, title: 'Service Details' },
+        { number: 3, title: 'Price & Describe' },
+        { number: 4, title: 'Review' }
+      ];
+    }
+    return baseSteps;
+  });
 
   categories = ['Transportation', 'Home Repairs', 'Tutoring', 'Delivery', 'Cleaning', 'Other Services'];
 
-  progressWidth = computed(() => ((this.currentStep() - 1) / (this.steps.length - 1)) * 100);
+  progressWidth = computed(() => {
+    const totalSteps = this.steps().length;
+    if (totalSteps <= 1) return 0;
+    return ((this.currentStep() - 1) / (totalSteps - 1)) * 100;
+  });
+
+  pageTitle = computed(() => {
+    if (this.currentStep() === 1) return 'Choose Action';
+    return this.mode() === 'request' ? 'Create Service Request' : 'Post Service Offering';
+  });
+
+  pageDescription = computed(() => {
+    if (this.currentStep() === 1) return 'Would you like to request help or offer your services?';
+    return this.mode() === 'request' ? 'Fill in the details to post your request' : 'Fill in the details to offer your service';
+  });
 
   constructor() {
     this.requestForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
       category: ['', Validators.required],
       description: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(1000)]],
-      budget: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
-      location: ['', Validators.required],
-      date: ['', Validators.required],
-      time: ['', Validators.required],
+      budget: [''], // Will add/remove validator based on mode
+      location: [''], // Mode-specific
+      date: [''], // Request-only
+      time: [''], // Request-only
       urgent: [false]
     });
 
@@ -118,8 +150,36 @@ export class CreateRequestComponent {
     this.closeMapModal();
   }
 
+  setMode(mode: 'request' | 'offering'): void {
+    this.mode.set(mode);
+    const budgetControl = this.requestForm.get('budget');
+    const locationControl = this.requestForm.get('location');
+    const dateControl = this.requestForm.get('date');
+    const timeControl = this.requestForm.get('time');
+
+    if (mode === 'request') {
+      budgetControl?.setValidators([Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]);
+      locationControl?.setValidators([Validators.required]);
+      dateControl?.setValidators([Validators.required]);
+      timeControl?.setValidators([Validators.required]);
+    } else {
+      budgetControl?.setValidators([Validators.required]); // For offering, it's the price string
+      locationControl?.clearValidators();
+      dateControl?.clearValidators();
+      timeControl?.clearValidators();
+    }
+    
+    budgetControl?.updateValueAndValidity();
+    locationControl?.updateValueAndValidity();
+    dateControl?.updateValueAndValidity();
+    timeControl?.updateValueAndValidity();
+    
+    this.nextStep();
+  }
+
   nextStep(): void {
-    if (this.currentStep() < 4) {
+    const totalSteps = this.steps().length;
+    if (this.currentStep() < totalSteps) {
       if (!this.validateCurrentStep()) {
         return;
       }
@@ -131,6 +191,9 @@ export class CreateRequestComponent {
 
   prevStep(): void {
     if (this.currentStep() > 1) {
+      if (this.currentStep() === 2) {
+        this.mode.set(null);
+      }
       this.currentStep.update(v => v - 1);
       this.errorMessage.set('');
     }
@@ -244,19 +307,23 @@ export class CreateRequestComponent {
   }
 
   validateCurrentStep(): boolean {
+    if (this.currentStep() === 1) return this.mode() !== null;
+
     const step = this.currentStep();
+    const mode = this.mode();
     let fieldsToValidate: string[] = [];
 
-    switch (step) {
-      case 1:
-        fieldsToValidate = ['title', 'category'];
-        break;
-      case 2:
-        fieldsToValidate = ['description', 'budget'];
-        break;
-      case 3:
-        fieldsToValidate = ['location', 'date', 'time'];
-        break;
+    if (mode === 'request') {
+      switch (step) {
+        case 2: fieldsToValidate = ['title', 'category']; break;
+        case 3: fieldsToValidate = ['description', 'budget']; break;
+        case 4: fieldsToValidate = ['location', 'date', 'time']; break;
+      }
+    } else {
+      switch (step) {
+        case 2: fieldsToValidate = ['title', 'category']; break;
+        case 3: fieldsToValidate = ['description', 'budget']; break; // budget is price here
+      }
     }
 
     let isValid = true;
@@ -285,7 +352,7 @@ export class CreateRequestComponent {
 
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
-      this.errorMessage.set('Please log in to create a request');
+      this.errorMessage.set('Please log in to proceed');
       this.router.navigate(['/auth']);
       return;
     }
@@ -295,26 +362,36 @@ export class CreateRequestComponent {
 
     const formValue = this.requestForm.value;
 
-    this.apiService.createRequest({
-      title: formValue.title,
-      category: formValue.category,
-      description: formValue.description,
-      budget: formValue.budget,
-      location: formValue.location,
-      date: formValue.date,
-      time: formValue.time,
-      urgent: formValue.urgent
-    }).subscribe({
-      next: (response) => {
-        console.log('Request created:', response);
-        this.router.navigate(['/home']);
-      },
-      error: (error) => {
-        console.error('Error creating request:', error);
-        this.errorMessage.set('Failed to create request. Please try again.');
-        this.isSubmitting.set(false);
-      }
-    });
+    if (this.mode() === 'request') {
+      this.apiService.createRequest({
+        title: formValue.title,
+        category: formValue.category,
+        description: formValue.description,
+        budget: formValue.budget,
+        location: formValue.location,
+        date: formValue.date,
+        time: formValue.time,
+        urgent: formValue.urgent
+      }).subscribe({
+        next: () => this.router.navigate(['/home']),
+        error: () => this.handleError()
+      });
+    } else {
+      this.apiService.createServiceOffering(userId, {
+        title: formValue.title,
+        category: formValue.category,
+        description: formValue.description,
+        price: formValue.budget // Form field is budget, but it's price for offering
+      }).subscribe({
+        next: () => this.router.navigate(['/admin-dashboard']),
+        error: () => this.handleError()
+      });
+    }
+  }
+
+  private handleError(): void {
+    this.errorMessage.set('Submission failed. Please try again.');
+    this.isSubmitting.set(false);
   }
 
   navigate(screen: string): void {

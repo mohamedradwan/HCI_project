@@ -37,7 +37,7 @@
       <!-- Requests List -->
       <div class="lg:col-span-2">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Available Requests</h2>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Explore Community</h2>
         </div>
 
         <!-- Search Bar -->
@@ -149,7 +149,13 @@
                   @if (request.urgent) {
                   <span class="badge-danger">🔥 Urgent</span>
                   }
-                  <span class="badge-primary">{{ request.category }}</span>
+                  <span [ngClass]="request.isOffering ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' : 'badge-primary'" 
+                        class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                    {{ request.isOffering ? '💎 Service' : request.category }}
+                  </span>
+                  @if (request.isOffering) {
+                    <span class="badge-primary">{{ request.category }}</span>
+                  }
                 </div>
                 <p class="text-slate-600 dark:text-slate-400 mb-3">{{ request.userName }}</p>
 
@@ -157,8 +163,9 @@
                   <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                     📍 {{ request.location }}
                   </span>
-                  <span class="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
-                    💵 {{ request.budget }}
+                  <span class="flex items-center gap-1 font-medium"
+                        [ngClass]="request.isOffering ? 'text-indigo-600 dark:text-indigo-400' : 'text-green-600 dark:text-green-400'">
+                    {{ request.isOffering ? '🏷️' : '💵' }} {{ request.isOffering ? request.price : request.budget }}
                   </span>
                   <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                     ⭐ {{ request.userRating?.toFixed(1) || 'New' }}

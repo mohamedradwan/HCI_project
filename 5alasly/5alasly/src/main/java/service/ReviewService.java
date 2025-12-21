@@ -15,6 +15,7 @@ public class ReviewService {
     private final ServiceRequestRepository requestRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Transactional
     public Review createReview(Long reviewerId, ReviewDTO dto) {
@@ -48,6 +49,15 @@ public class ReviewService {
 
         // Update user's average rating
         userService.updateUserRating(ratedUser.getId());
+
+        // Notify the rated user
+        notificationService.createNotification(
+                ratedUser.getId(),
+                Notification.NotificationType.REVIEW_RECEIVED,
+                "New Review Received",
+                reviewer.getName() + " left you a " + dto.getRating() + "-star review",
+                dto.getRequestId(),
+                reviewerId);
 
         return review;
     }
