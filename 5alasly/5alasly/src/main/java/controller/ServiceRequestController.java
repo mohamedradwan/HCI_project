@@ -125,6 +125,12 @@ public class ServiceRequestController {
         }
     }
 
+    @PostMapping("/search")
+    public ResponseEntity<List<ServiceRequestDTO>> searchWithFilters(@RequestBody SearchFiltersDTO filters) {
+        List<ServiceRequestDTO> requests = requestService.searchWithFilters(filters);
+        return ResponseEntity.ok(requests);
+    }
+
     // DTO for payment info
     public static class PaymentDTO {
         private String orderId;

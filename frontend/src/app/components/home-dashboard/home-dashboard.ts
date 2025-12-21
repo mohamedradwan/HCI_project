@@ -25,7 +25,7 @@ export class HomeDashboardComponent implements OnInit {
   selectedCategory = signal('all');
   searchQuery = signal('');
   stats = signal<any[]>([]);
-  nearbyRequests = signal<ServiceRequestDTO[]>([]);
+  nearbyRequests = signal<any[]>([]); // Can contain both ServiceRequestDTO and ServiceOfferingDTO
   isLoading = signal(true);
   userName = signal('User');
   showOnboarding = signal(false);
@@ -141,14 +141,148 @@ export class HomeDashboardComponent implements OnInit {
     this.isLoading.set(true);
     this.apiService.getAllOpenRequests().subscribe({
       next: (requests) => {
-        this.nearbyRequests.set(requests);
+        // Mock additional requests to populate the home page
+        const mockRequests: ServiceRequestDTO[] = [
+          {
+            id: 101,
+            title: 'Help moving furniture',
+            category: 'Transportation',
+            description: 'Need help moving a sofa and a bed to my new apartment. 4th floor, no elevator.',
+            budget: '$80',
+            location: 'Downtown Cairo',
+            date: '2025-12-23',
+            time: '14:00',
+            userName: 'Mona Ahmed',
+            userRating: 4.8,
+            urgent: true,
+            latitude: 30.0449,
+            longitude: 31.2358,
+            timeAgo: '2h ago'
+          },
+          {
+            id: 102,
+            title: 'Math Tutor for Calculus',
+            category: 'Tutoring',
+            description: 'Looking for an experienced tutor for university level calculus. Need help with derivatives and integrals.',
+            budget: '$30/hr',
+            location: 'Maadi',
+            date: '2025-12-22',
+            time: '18:00',
+            userName: 'Sherif Zeyad',
+            userRating: 4.5,
+            urgent: false,
+            latitude: 29.9602,
+            longitude: 31.2569,
+            timeAgo: '5h ago'
+          },
+          {
+            id: 103,
+            title: 'Leaking Faucet in Kitchen',
+            category: 'Home Repairs',
+            description: 'My kitchen faucet is leaking constantly. Need someone to come and fix it or replace the washer.',
+            budget: '$40',
+            location: 'Zamalek',
+            date: '2025-12-21',
+            time: '15:30',
+            userName: 'Layla Mahmoud',
+            userRating: 4.9,
+            urgent: false,
+            latitude: 30.0631,
+            longitude: 31.2211,
+            timeAgo: '1h ago'
+          },
+          {
+            id: 104,
+            title: 'Grocery Shopping & Delivery',
+            category: 'Delivery',
+            description: 'I need someone to pick up a list of groceries from the supermarket and deliver them to my home.',
+            budget: '$15 + items',
+            location: 'New Cairo',
+            date: '2025-12-21',
+            time: '12:00',
+            userName: 'Tarek Fathy',
+            userRating: 4.2,
+            urgent: true,
+            latitude: 30.0263,
+            longitude: 31.4117,
+            timeAgo: '30m ago'
+          },
+          {
+            id: 105,
+            title: 'Dog Walking - 1 Hour',
+            category: 'Other Services',
+            description: 'Need someone to walk my Golden Retriever for an hour while I am at work.',
+            budget: '$10',
+            location: 'Nasr City',
+            date: '2025-12-22',
+            time: '09:00',
+            userName: 'Heba Ali',
+            userRating: 4.7,
+            urgent: false,
+            latitude: 30.0566,
+            longitude: 31.3301,
+            timeAgo: '8h ago'
+          },
+          {
+            id: 106,
+            title: 'Professional House Cleaning',
+            category: 'Cleaning',
+            description: '3-bedroom apartment needs deep cleaning, including windows and kitchen appliances.',
+            budget: '$120',
+            location: 'Dokki',
+            date: '2025-12-24',
+            time: '08:30',
+            userName: 'Omnia Samir',
+            userRating: 5.0,
+            urgent: false,
+            latitude: 30.0396,
+            longitude: 31.2139,
+            timeAgo: '1 day ago'
+          }
+        ];
+
+        // Mock additional offerings to populate the home page
+        const mockOfferings: any[] = [
+          {
+            id: 201,
+            title: 'Professional Graphic Design',
+            category: 'Other Services',
+            description: 'Can design logos, social media posts, and branding materials.',
+            price: '$25/hr',
+            userName: 'Yasmine Hassan',
+            userRating: 4.9,
+            isOffering: true, // Marker for template
+            latitude: 30.0444,
+            longitude: 31.2357,
+            location: 'Remote / Cairo'
+          },
+          {
+            id: 202,
+            title: 'Expert Plumbing Services',
+            category: 'Home Repairs',
+            description: 'Fixing all types of leaks, installing water heaters, and pipe maintenance.',
+            price: '$50/visit',
+            userName: 'Hassan Naguib',
+            userRating: 4.6,
+            isOffering: true,
+            latitude: 30.0561,
+            longitude: 31.3301,
+            location: 'Nasr City'
+          }
+        ];
+
+        // Combine all
+        this.nearbyRequests.set([...requests, ...mockRequests, ...mockOfferings]);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Error loading requests:', error);
         this.isLoading.set(false);
-        // Set empty array on error
-        this.nearbyRequests.set([]);
+        // Fallback to only mock requests/offerings on error
+        this.nearbyRequests.set([
+          { id: 101, title: 'Help moving furniture', category: 'Transportation', budget: '$80', location: 'Downtown', userName: 'Mona', userRating: 4.8, urgent: true, latitude: 30.0449, longitude: 31.2358 },
+          { id: 201, title: 'Graphic Design', category: 'Other Services', price: '$25/hr', userName: 'Yasmine', userRating: 4.9, isOffering: true, latitude: 30.0444, longitude: 31.2357 }
+        ]);
       }
     });
   }

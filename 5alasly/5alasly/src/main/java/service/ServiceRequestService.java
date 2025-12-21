@@ -19,6 +19,7 @@ public class ServiceRequestService {
     private final UserRepository userRepository;
     private final TaskAssignmentRepository taskAssignmentRepository;
     private final RequestLikeRepository requestLikeRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ServiceRequestDTO createRequest(Long userId, CreateRequestDTO dto) {
@@ -88,6 +89,15 @@ public class ServiceRequestService {
         assignment.setHelperUser(helper);
         taskAssignmentRepository.save(assignment);
 
+        // Create notification for request owner
+        notificationService.createNotification(
+                request.getUser().getId(),
+                Notification.NotificationType.REQUEST_ACCEPTED,
+                "Request Accepted",
+                helper.getName() + " accepted your request: " + request.getTitle(),
+                requestId,
+                helperUserId);
+
         return convertToDTO(request);
     }
 
@@ -103,6 +113,24 @@ public class ServiceRequestService {
                 .orElseThrow(() -> new RuntimeException("Assignment not found"));
         assignment.setCompletedAt(LocalDateTime.now());
         taskAssignmentRepository.save(assignment);
+
+        // Notify request owner
+        notificationService.createNotification(
+                request.getUser().getId(),
+                Notification.NotificationType.REQUEST_COMPLETED,
+                "Request Completed",
+                "Your request \"" + request.getTitle() + "\" has been completed!",
+                requestId,
+                assignment.getHelperUser().getId());
+
+        // Notify helper
+        notificationService.createNotification(
+                assignment.getHelperUser().getId(),
+                Notification.NotificationType.REQUEST_COMPLETED,
+                "Task Completed",
+                "You completed: " + request.getTitle(),
+                requestId,
+                request.getUser().getId());
 
         return convertToDTO(request);
     }
@@ -138,6 +166,18 @@ public class ServiceRequestService {
 
         request.setStatus(ServiceRequest.RequestStatus.CANCELLED);
         requestRepository.save(request);
+
+        // Notify helper if request was accepted
+        var assignment = taskAssignmentRepository.findByServiceRequestId(requestId);
+        if (assignment.isPresent()) {
+            notificationService.createNotification(
+                    assignment.get().getHelperUser().getId(),
+                    Notification.NotificationType.REQUEST_CANCELLED,
+                    "Request Cancelled",
+                    "The request \"" + request.getTitle() + "\" has been cancelled by the client",
+                    requestId,
+                    userId);
+        }
 
         return convertToDTO(request);
     }
@@ -237,5 +277,115 @@ public class ServiceRequestService {
         dto.setDislikeCount(dislikeCount != null ? dislikeCount : 0L);
 
         return dto;
+    }
+
+    // Advanced search with filters
+    public List<ServiceRequestDTO> searchWithFilters(SearchFiltersDTO filters) {
+        List<ServiceRequest> allRequests = requestRepository.findAllOpenRequests();
+
+        return allRequests.stream()
+                .filter(request -> {
+                    if (filters.getCategory() != null && !filters.getCategory().equals("all")
+                            && !filters.getCategory().isEmpty()) {
+                        if (!request.getCategory().equalsIgnoreCase(filters.getCategory())) {
+                            return false;
+                        }
+                    }
+                    if (filters.getSearchQuery() != null && !filters.getSearchQuery().isEmpty()) {
+                        String query = filters.getSearchQuery().toLowerCase();
+                        if (!request.getTitle().toLowerCase().contains(query)
+                                && !request.getDescription().toLowerCase().contains(query)) {
+                            return false;
+                        }
+                    }
+                    if (filters.getMinBudget() != null || filters.getMaxBudget() != null) {
+                        try {
+                            String budgetStr = request.getBudget().replaceAll("[^0-9.]", "");
+                            double budget = Double.parseDouble(budgetStr);
+                            if (filters.getMinBudget() != null && budget < filters.getMinBudget()) {
+                                return false;
+                            }
+                            if (filters.getMaxBudget() != null && budget > filters.getMaxBudget()) {
+                                return false;
+                            }
+                        } catch (NumberFormatException ignore) {
+                        }
+                    }
+                    if (filters.getUrgentOnly() != null && filters.getUrgentOnly()) {
+                        if (!request.getUrgent()) {
+                            return false;
+                        }
+                    }
+                    if (filters.getMinRating() != null) {
+                        if (request.getUser().getRating() < filters.getMinRating()) {
+                            return false;
+                        }
+                    }
+                    if (filters.getMaxDistance() != null && filters.getUserLatitude() != null
+                            && filters.getUserLongitude() != null) {
+                        if (request.getLatitude() != null && request.getLongitude() != null) {
+                            double distance = calculateDistance(
+                                    filters.getUserLatitude(), filters.getUserLongitude(),
+                                    request.getLatitude(), request.getLongitude());
+                            if (distance > filters.getMaxDistance()) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                })
+                .map(this::convertToDTO)
+                .sorted((r1, r2) -> {
+                    String sortBy = filters.getSortBy() != null ? filters.getSortBy() : "date";
+                    String sortOrder = filters.getSortOrder() != null ? filters.getSortOrder() : "desc";
+                    int multiplier = sortOrder.equals("asc") ? 1 : -1;
+                    switch (sortBy.toLowerCase()) {
+                        case "price":
+                            try {
+                                double budget1 = Double.parseDouble(r1.getBudget().replaceAll("[^0-9.]", ""));
+                                double budget2 = Double.parseDouble(r2.getBudget().replaceAll("[^0-9.]", ""));
+                                return multiplier * Double.compare(budget1, budget2);
+                            } catch (NumberFormatException e) {
+                                return 0;
+                            }
+                        case "rating":
+                            return multiplier * Double.compare(
+                                    r1.getUserRating() != null ? r1.getUserRating() : 0.0,
+                                    r2.getUserRating() != null ? r2.getUserRating() : 0.0);
+                        case "distance":
+                            if (filters.getUserLatitude() != null && filters.getUserLongitude() != null) {
+                                double dist1 = request1Distance(r1, filters);
+                                double dist2 = request1Distance(r2, filters);
+                                return multiplier * Double.compare(dist1, dist2);
+                            }
+                            return 0;
+                        case "date":
+                        default:
+                            return multiplier * Long.compare(
+                                    r2.getId() != null ? r2.getId() : 0L,
+                                    r1.getId() != null ? r1.getId() : 0L);
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+    private double request1Distance(ServiceRequestDTO request, SearchFiltersDTO filters) {
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            return calculateDistance(
+                    filters.getUserLatitude(), filters.getUserLongitude(),
+                    request.getLatitude(), request.getLongitude());
+        }
+        return Double.MAX_VALUE;
+    }
+
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int EARTH_RADIUS_KM = 6371;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS_KM * c;
     }
 }

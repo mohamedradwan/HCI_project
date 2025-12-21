@@ -4,11 +4,12 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { ApiService } from '../../services/api';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { NotificationCenterComponent } from '../notification-center/notification-center';
 
 @Component({
   selector: 'app-nav-bar',
   standalone: true,
-  imports: [ButtonComponent],
+  imports: [ButtonComponent, NotificationCenterComponent],
   template: `
     <nav class="sticky top-0 z-50 border-b backdrop-blur-xl transition-all duration-300
                 bg-white/80 border-slate-200/50 dark:bg-dark-900/80 dark:border-dark-700/50">
@@ -42,12 +43,12 @@ import { ButtonComponent } from '../../shared/components/button/button.component
             <app-button
               [variant]="currentScreen() === 'home' ? 'secondary' : 'ghost'"
               (clicked)="navigate('home')">
-              <span class="mr-2">🏠</span> Dashboard
+              <span class="mr-2">🏠</span> Home
             </app-button>
             <app-button
               [variant]="currentScreen() === 'create' ? 'secondary' : 'ghost'"
               (clicked)="navigate('create')">
-              <span class="mr-2">➕</span> Post Request
+              <span class="mr-2">➕</span> Create
             </app-button>
           </div>
 
@@ -70,6 +71,9 @@ import { ButtonComponent } from '../../shared/components/button/button.component
               }
             </button>
 
+            <!-- Notification Bell -->
+            <app-notification-center></app-notification-center>
+
             <!-- Profile Menu -->
             <app-button variant="ghost" size="icon" (clicked)="showMenu = !showMenu">
               @if (userAvatarUrl()) {
@@ -89,6 +93,12 @@ import { ButtonComponent } from '../../shared/components/button/button.component
                          hover:bg-slate-50 dark:hover:bg-dark-700 text-slate-700 dark:text-slate-200">
                   <span class="text-lg">👤</span>
                   <span class="font-medium">View Profile</span>
+                </button>
+                <button (click)="navigate('admin-dashboard'); showMenu=false" 
+                  class="w-full px-4 py-3 text-left flex items-center gap-3 transition-colors
+                         hover:bg-slate-50 dark:hover:bg-dark-700 text-slate-700 dark:text-slate-200">
+                  <span class="text-lg">🛠️</span>
+                  <span class="font-medium">Admin Dashboard</span>
                 </button>
                 <button (click)="navigate('settings'); showMenu=false" 
                   class="w-full px-4 py-3 text-left flex items-center gap-3 transition-colors
@@ -129,17 +139,17 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 
             <!-- Navigation Links -->
             <nav class="space-y-2">
-              <button (click)="navigate('home'); mobileMenuOpen=false"
+                <button (click)="navigate('home'); mobileMenuOpen=false"
                 class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors
                        hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
                 <span class="text-xl">🏠</span>
-                <span class="font-medium">Dashboard</span>
+                <span class="font-medium">Home</span>
               </button>
               <button (click)="navigate('create'); mobileMenuOpen=false"
                 class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors
                        hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
                 <span class="text-xl">➕</span>
-                <span class="font-medium">Post Request</span>
+                <span class="font-medium">Create</span>
               </button>
               <button (click)="navigate('profile'); mobileMenuOpen=false"
                 class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors
@@ -152,6 +162,12 @@ import { ButtonComponent } from '../../shared/components/button/button.component
                        hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
                 <span class="text-xl">⚙️</span>
                 <span class="font-medium">Settings</span>
+              </button>
+              <button (click)="navigate('admin-dashboard'); mobileMenuOpen=false"
+                class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors
+                       hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
+                <span class="text-xl">🛠️</span>
+                <span class="font-medium">Admin Dashboard</span>
               </button>
             </nav>
 

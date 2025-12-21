@@ -1,0 +1,63 @@
+<div class="notification-wrapper">
+  <!-- Bell Icon Trigger -->
+  <button class="notification-bell" (click)="toggle()" [class.has-unread]="notificationService.unreadCount() > 0">
+    <span class="bell-icon">🔔</span>
+    @if (notificationService.unreadCount() > 0) {
+      <span class="badge">{{ notificationService.unreadCount() }}</span>
+    }
+  </button>
+
+  <!-- Notification Dropdown -->
+  @if (isOpen()) {
+    <div class="notification-dropdown">
+      <!-- Header -->
+      <div class="notification-header">
+        <h3>Notifications</h3>
+        @if (notificationService.notifications().length > 0) {
+          <button class="mark-all-read" (click)="markAllAsRead()">
+            Mark all as read
+          </button>
+        }
+      </div>
+
+      <!-- Notifications List -->
+      <div class="notifications-list">
+        @if (notificationService.notifications().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">🔕</div>
+            <p>No notifications yet</p>
+            <span>You're all caught up!</span>
+          </div>
+        } @else {
+          @for (notification of notificationService.notifications(); track notification.id) {
+            <div 
+              class="notification-item" 
+              [class.unread]="!notification.isRead"
+              (click)="handleNotificationClick(notification)">
+              
+              <div class="notification-icon">{{ getIcon(notification.type) }}</div>
+              
+              <div class="notification-content">
+                <div class="notification-title">{{ notification.title }}</div>
+                <div class="notification-message">{{ notification.message }}</div>
+                <div class="notification-time">{{ notification.timeAgo }}</div>
+              </div>
+
+              <button 
+                class="delete-btn" 
+                (click)="deleteNotification(notification, $event)"
+                title="Delete notification">
+                ×
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Backdrop -->
+  @if (isOpen()) {
+    <div class="notification-backdrop" (click)="close()"></div>
+  }
+</div>
