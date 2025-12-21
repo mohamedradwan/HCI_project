@@ -78,15 +78,24 @@ export class ChatComponent implements OnInit, OnDestroy {
     const userId = this.currentUserId();
     if (!userId) return;
 
+    // 1. Fetch unread count for the badge
+    this.chatService.getUnreadMessages(userId).subscribe(msgs =>
+      this.unreadCount.set(msgs.length)
+    );
+
+    // 2. Fetch recent conversation participants
     this.chatService.getChatUserIds(userId).subscribe({
       next: (userIds) => {
         const contacts: any[] = [];
+
+        // If no previous chats, immediately check if we are starting a new one via URL
         if (userIds.length === 0) {
           this.chatContacts.set([]);
-          this.handleIncomingRecipient(); // Check if we need to start a new chat
+          this.handleIncomingRecipient();
           return;
         }
 
+        // Load user details for each recent contact
         userIds.forEach(id => {
           this.apiService.getUserById(id).subscribe({
             next: (user) => {
@@ -94,35 +103,43 @@ export class ChatComponent implements OnInit, OnDestroy {
                 id: user.id,
                 name: user.name,
                 avatar: user.avatarUrl,
-                lastMessage: ''
+                lastMessage: '' // Can be updated if backend provides last message
               });
+
+              // Once all existing contacts are loaded, handle potential auto-selection
               if (contacts.length === userIds.length) {
                 this.chatContacts.set(contacts);
-                this.handleIncomingRecipient(); // Handle the "Contact User" redirect
+                this.handleIncomingRecipient();
               }
             }
           });
         });
       }
     });
-
-    this.chatService.getUnreadMessages(userId).subscribe(msgs => this.unreadCount.set(msgs.length));
   }
 
-  // New logic to handle the recipientId from Request Details
+  /**
+   * Handles the logic for when a user clicks "Contact User" from Request Details.
+   * It checks the 'recipientId' query parameter and selects that user.
+   */
   private handleIncomingRecipient() {
     this.route.queryParams.subscribe(params => {
       const recipientId = params['recipientId'];
       if (recipientId) {
         const id = parseInt(recipientId);
         const existing = this.chatContacts().find(c => c.id === id);
-        
+
         if (existing) {
           this.selectUser(existing);
         } else {
-          // If the user isn't in the list yet, fetch their details to start the chat
+          // If the user isn't in recent contacts, fetch details and add them to the list
           this.apiService.getUserById(id).subscribe(user => {
-            const newContact = { id: user.id, name: user.name, avatar: user.avatarUrl, lastMessage: '' };
+            const newContact = {
+              id: user.id,
+              name: user.name,
+              avatar: user.avatarUrl,
+              lastMessage: 'Starting new conversation...'
+            };
             this.chatContacts.update(list => [newContact, ...list]);
             this.selectUser(newContact);
           });
@@ -189,7 +206,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   deleteMessage(messageId: number) {
     if (confirm('Delete this message?')) {
       this.chatService.deleteMessage(messageId, this.currentUserId()!).subscribe(deletedMsg => {
-        this.conversationMessages.update(msgs => 
+        this.conversationMessages.update(msgs =>
           msgs.map(m => m.id === messageId ? deletedMsg : m)
         );
       });
