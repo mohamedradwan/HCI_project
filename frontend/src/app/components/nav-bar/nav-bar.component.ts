@@ -49,6 +49,11 @@ import { ButtonComponent } from '../../shared/components/button/button.component
               (clicked)="navigate('create')">
               <span class="mr-2">➕</span> Post Request
             </app-button>
+            <app-button
+              [variant]="currentScreen() === 'chat' ? 'secondary' : 'ghost'"
+              (clicked)="navigate('chat')">
+              <span class="mr-2">💬</span> Messages
+            </app-button>
           </div>
 
           <!-- Right Section -->
@@ -140,6 +145,12 @@ import { ButtonComponent } from '../../shared/components/button/button.component
                        hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
                 <span class="text-xl">➕</span>
                 <span class="font-medium">Post Request</span>
+              </button>
+              <button (click)="navigate('chat'); mobileMenuOpen=false"
+                class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors
+                       hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
+                <span class="text-xl">💬</span>
+                <span class="font-medium">Messages</span>
               </button>
               <button (click)="navigate('profile'); mobileMenuOpen=false"
                 class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors

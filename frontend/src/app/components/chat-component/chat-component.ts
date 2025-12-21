@@ -1,3 +1,8 @@
+// styles: [`
+//   /* FIXED: Chat now takes full screen height without empty gaps */
+//   .chat-container { height: 100vh; border-radius: 0; }
+//   @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+// `]
 import { Component, OnInit, OnDestroy, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -5,7 +10,7 @@ import { ChatService, ChatMessageDTO } from '../../services/chat-service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api';
 import { Router, ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { of, forkJoin } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 @Component({
@@ -40,6 +45,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   hoveredMessageId = signal<number | null>(null);
 
   private typingTimeout: any;
+  private refreshInterval: any;
 
   ngOnInit() {
     const user = this.authService.currentUser();
@@ -62,20 +68,23 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Load URL recipient immediately
-    this.handleIncomingRecipient();
-
-    // Load history in background
+    // CRITICAL FIX: Load chat contacts first, then handle recipient after a delay
+    // This ensures the sidebar is populated before selecting a user
     this.loadChatContacts();
+
+    // Wait for contacts to load before handling the incoming recipient
+    setTimeout(() => {
+      this.handleIncomingRecipient();
+    }, 500);
   }
 
   ngOnDestroy() {
     this.chatService.disconnect();
     if (this.typingTimeout) clearTimeout(this.typingTimeout);
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
-  // FIX: Load contacts ONE BY ONE (Streaming)
-  // This ensures that if one works, it shows up immediately.
+  // FIXED: Load contacts reliably using forkJoin to batch requests
   loadChatContacts() {
     const userId = this.currentUserId();
     if (!userId) return;
@@ -86,26 +95,51 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.getChatUserIds(userId).subscribe({
       next: (userIds) => {
-        if (!userIds || userIds.length === 0) return;
+        console.log('📧 Chat User IDs received:', userIds); // DEBUG
+        if (!userIds || userIds.length === 0) {
+          console.warn('⚠️ No chat user IDs returned');
+          return;
+        }
+        console.log(`✅ Loading ${userIds.length} chat contacts...`); // DEBUG
 
-        // Iterate and fetch each user individually
-        userIds.forEach(id => {
+        // Prepare requests for all users
+        const requests = userIds.map(id =>
           this.apiService.getUserById(id).pipe(
             catchError(err => {
               console.warn(`Failed to load user ${id}`, err);
               return of(null);
             })
-          ).subscribe(user => {
+          )
+        );
+
+        // Fetch all users in parallel and update the list once
+        forkJoin(requests).subscribe(users => {
+          const newContacts: any[] = [];
+
+          users.forEach(user => {
             if (user) {
-              const contact = {
+              newContacts.push({
                 id: user.id,
                 name: user.name,
                 avatar: user.avatarUrl,
-                lastMessage: ''
-              };
-              this.addContactToList(contact);
+                lastMessage: '',
+                lastMessageTime: new Date().toISOString() // Will be updated with real message time
+              });
             }
           });
+
+          console.log('👥 Loaded contacts:', newContacts); // DEBUG
+
+          // Update signal safely, avoiding duplicates if recipient was already added
+          if (newContacts.length > 0) {
+            this.chatContacts.update(currentList => {
+              const existingIds = new Set(currentList.map(c => c.id));
+              const toAdd = newContacts.filter(c => !existingIds.has(c.id));
+              const finalList = [...currentList, ...toAdd];
+              console.log('📋 Final chat contacts list:', finalList); // DEBUG
+              return finalList;
+            });
+          }
         });
       },
       error: (err) => console.error('Failed to load chat history IDs', err)
@@ -117,14 +151,18 @@ export class ChatComponent implements OnInit, OnDestroy {
       const recipientId = params['recipientId'];
       if (recipientId) {
         const id = parseInt(recipientId);
+        console.log('🔍 Handling incoming recipient:', id); // DEBUG
+        console.log('📋 Current chat contacts:', this.chatContacts()); // DEBUG
 
         // Check if already in list (might have loaded from history)
         const existing = this.chatContacts().find(c => c.id === id);
         if (existing) {
+          console.log('✅ Recipient found in existing contacts'); // DEBUG
           this.selectUser(existing);
           return;
         }
 
+        console.log('⚠️ Recipient not in contacts, fetching user data...'); // DEBUG
         // Fetch explicitly
         this.apiService.getUserById(id).subscribe({
           next: (user) => {
@@ -134,6 +172,7 @@ export class ChatComponent implements OnInit, OnDestroy {
               avatar: user.avatarUrl,
               lastMessage: 'New Chat'
             };
+            console.log('➕ Adding new contact:', newContact); // DEBUG
             this.addContactToList(newContact);
             this.selectUser(newContact);
           },
@@ -163,6 +202,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.subscribeToMessages(this.currentUserId()!);
     this.chatService.subscribeToTypingIndicator(this.currentUserId()!);
+
+    // AUTO-REFRESH: Reload messages every 5 seconds
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
+    this.refreshInterval = setInterval(() => {
+      if (this.selectedUser()) {
+        this.loadConversation();
+      }
+    }, 5000);
   }
 
   loadConversation() {

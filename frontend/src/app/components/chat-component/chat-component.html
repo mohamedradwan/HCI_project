@@ -1,10 +1,10 @@
-<div class="chat-container bg-white rounded-lg shadow-lg flex flex-col">
+<div class="chat-container bg-white dark:bg-dark-900 rounded-lg shadow-lg flex flex-col">
     <div
         class="chat-header bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <button (click)="goBack()" class="text-white hover:bg-blue-700 p-2 rounded transition">
-                ← Back
-            </button>
+            <div *ngIf="!selectedUser()" class="flex items-center gap-2">
+                <h2 class="font-bold text-xl">💬 Messages</h2>
+            </div>
             <div *ngIf="selectedUser()" class="flex items-center gap-2">
                 <img [src]="selectedUser()?.avatar || 'https://i.pravatar.cc/150'" alt="User"
                     class="w-10 h-10 rounded-full">
@@ -25,28 +25,49 @@
     </div>
 
     <div class="flex-1 flex overflow-hidden">
-        <div class="w-64 border-r border-gray-300 overflow-y-auto bg-gray-50">
-            <div *ngIf="chatContacts().length === 0" class="text-gray-400 text-sm text-center py-4">
-                Loading chats...
+        <div
+            class="w-80 border-r border-gray-300 dark:border-dark-700 overflow-y-auto bg-gray-50 dark:bg-dark-800 flex flex-col">
+            <div class="p-4 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-900">
+                <h3 class="font-bold text-lg text-gray-900 dark:text-slate-100">Chats</h3>
+            </div>
+
+            <div *ngIf="chatContacts().length === 0" class="text-gray-400 dark:text-slate-500 text-sm text-center py-8">
+                <div class="text-4xl mb-2">💬</div>
+                <p>No chats yet</p>
+                <p class="text-xs mt-1">Start a conversation!</p>
             </div>
 
             <div *ngFor="let contact of chatContacts()" (click)="selectUser(contact)"
-                [class.bg-blue-100]="selectedUser()?.id === contact.id"
-                class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition">
-                <div class="flex items-center gap-2">
+                [class.bg-blue-50]="selectedUser()?.id === contact.id"
+                [class.dark:bg-blue-900/30]="selectedUser()?.id === contact.id"
+                class="p-3 border-b border-gray-200 dark:border-dark-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-all duration-150">
+                <div class="flex items-center gap-3">
+                    <!-- Avatar -->
                     <img [src]="contact.avatar || 'https://i.pravatar.cc/150'" alt="{{ contact.name }}"
-                        class="w-8 h-8 rounded-full">
+                        class="w-12 h-12 rounded-full object-cover flex-shrink-0">
+
+                    <!-- Name and Message -->
                     <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-sm truncate">{{ contact.name }}</p>
-                        <p class="text-xs text-gray-500 truncate">{{ contact.lastMessage || 'Open Chat' }}</p>
+                        <div class="flex items-baseline justify-between mb-1">
+                            <p class="font-semibold text-gray-900 dark:text-slate-100 truncate text-sm">
+                                {{ contact.name }}
+                            </p>
+                            <span class="text-xs text-gray-500 dark:text-slate-500 ml-2 flex-shrink-0">
+                                12:34 PM
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-slate-400 truncate">
+                            {{ contact.lastMessage || 'Tap to start chatting' }}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col">
-            <div #messagesContainer class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-100">
-                <div *ngIf="!selectedUser()" class="flex items-center justify-center h-full text-gray-500">
+            <div #messagesContainer class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-100 dark:bg-dark-800">
+                <div *ngIf="!selectedUser()"
+                    class="flex items-center justify-center h-full text-gray-500 dark:text-slate-400">
                     <p>Select a contact to view conversation</p>
                 </div>
 
@@ -55,13 +76,17 @@
                         [class.mr-auto]="msg.senderId !== currentUserId()" class="max-w-xs w-fit">
 
                         <div [class.bg-blue-500]="msg.senderId === currentUserId()"
+                            [class.dark:bg-blue-600]="msg.senderId === currentUserId()"
                             [class.bg-gray-300]="msg.senderId !== currentUserId()"
+                            [class.dark:bg-dark-700]="msg.senderId !== currentUserId()"
                             [class.text-white]="msg.senderId === currentUserId()"
                             [class.text-gray-800]="msg.senderId !== currentUserId()"
+                            [class.dark:text-slate-200]="msg.senderId !== currentUserId()"
                             class="px-4 py-2 rounded-lg break-words">
                             {{ msg.content }}
                             <div [class.text-blue-100]="msg.senderId === currentUserId()"
                                 [class.text-gray-600]="msg.senderId !== currentUserId()"
+                                [class.dark:text-slate-400]="msg.senderId !== currentUserId()"
                                 class="text-xs mt-1 text-right">
                                 {{ formatTime(msg.createdAt) }}
                             </div>
@@ -70,12 +95,14 @@
                 </div>
             </div>
 
-            <div *ngIf="selectedUser()" class="border-t border-gray-300 p-4 bg-white">
+            <div *ngIf="selectedUser()"
+                class="border-t border-gray-300 dark:border-dark-700 p-4 bg-white dark:bg-dark-900">
                 <div class="flex gap-2">
                     <input type="text" [(ngModel)]="messageInput" (keyup.enter)="sendMessage()"
                         (input)="onMessageInputChange()" placeholder="Type a message..."
-                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2">
-                    <button (click)="sendMessage()" class="bg-blue-500 text-white px-6 py-2 rounded-lg">
+                        class="flex-1 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button (click)="sendMessage()"
+                        class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
                         Send
                     </button>
                 </div>
