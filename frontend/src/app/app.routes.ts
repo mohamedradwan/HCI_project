@@ -60,6 +60,15 @@ export const routes: Routes = [
       .then(m => m.SettingsComponent)
   },
   {
+    path: 'chat',
+    title: 'Chat | 5alasly',
+    data: { key: 'chat' },
+    // canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/chat-component/chat-component')
+        .then(m => m.ChatComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }
