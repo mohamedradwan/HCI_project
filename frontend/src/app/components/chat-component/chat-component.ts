@@ -1,12 +1,12 @@
-// frontend/src/app/components/chat-component/chat-component.ts
-
 import { Component, OnInit, OnDestroy, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChatService, ChatMessageDTO, TypingIndicatorDTO } from '../../services/chat-service';
+import { ChatService, ChatMessageDTO } from '../../services/chat-service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api';
-import { Router, ActivatedRoute } from '@angular/router'; // Added ActivatedRoute
+import { Router, ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-chat',
@@ -14,7 +14,8 @@ import { Router, ActivatedRoute } from '@angular/router'; // Added ActivatedRout
   imports: [CommonModule, FormsModule],
   templateUrl: './chat-component.html',
   styles: [`
-    .chat-container { max-height: calc(100vh - 80px); }
+    /* FIXED: Chat now takes full screen height without empty gaps */
+    .chat-container { height: 100vh; border-radius: 0; }
     @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
   `]
 })
@@ -23,9 +24,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private apiService = inject(ApiService);
   private router = inject(Router);
-  private route = inject(ActivatedRoute); // Added
+  private route = inject(ActivatedRoute);
 
-  @ViewChild('messagesContainer') private messagesContainer!: ElementRef; // Added for scrolling
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   currentUserId = signal<number | null>(null);
   selectedUser = signal<any>(null);
@@ -33,10 +34,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   chatContacts = signal<any[]>([]);
   messageInput = '';
   isSending = signal(false);
-  hoveredMessageId = signal<number | null>(null);
   wsConnected = signal(false);
   isTyping = signal(false);
   unreadCount = signal(0);
+  hoveredMessageId = signal<number | null>(null);
 
   private typingTimeout: any;
 
@@ -47,16 +48,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.currentUserId.set(user.userId);
+    this.currentUserId.set(Number(user.userId));
     this.chatService.connect(user.userId);
 
-    this.chatService.connectionStatus$.subscribe(status => {
-      this.wsConnected.set(status);
-    });
-
-    this.chatService.messageReceived$.subscribe(message => {
-      this.handleReceivedMessage(message);
-    });
+    this.chatService.connectionStatus$.subscribe(status => this.wsConnected.set(status));
+    this.chatService.messageReceived$.subscribe(msg => this.handleReceivedMessage(msg));
 
     this.chatService.typingIndicator$.subscribe(indicator => {
       if (indicator.userId === this.selectedUser()?.id && indicator.isTyping) {
@@ -66,6 +62,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Load URL recipient immediately
+    this.handleIncomingRecipient();
+
+    // Load history in background
     this.loadChatContacts();
   }
 
@@ -74,84 +74,93 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.typingTimeout) clearTimeout(this.typingTimeout);
   }
 
+  // FIX: Load contacts ONE BY ONE (Streaming)
+  // This ensures that if one works, it shows up immediately.
   loadChatContacts() {
     const userId = this.currentUserId();
     if (!userId) return;
 
-    // 1. Fetch unread count for the badge
     this.chatService.getUnreadMessages(userId).subscribe(msgs =>
       this.unreadCount.set(msgs.length)
     );
 
-    // 2. Fetch recent conversation participants
     this.chatService.getChatUserIds(userId).subscribe({
       next: (userIds) => {
-        const contacts: any[] = [];
+        if (!userIds || userIds.length === 0) return;
 
-        // If no previous chats, immediately check if we are starting a new one via URL
-        if (userIds.length === 0) {
-          this.chatContacts.set([]);
-          this.handleIncomingRecipient();
-          return;
-        }
-
-        // Load user details for each recent contact
+        // Iterate and fetch each user individually
         userIds.forEach(id => {
-          this.apiService.getUserById(id).subscribe({
-            next: (user) => {
-              contacts.push({
+          this.apiService.getUserById(id).pipe(
+            catchError(err => {
+              console.warn(`Failed to load user ${id}`, err);
+              return of(null);
+            })
+          ).subscribe(user => {
+            if (user) {
+              const contact = {
                 id: user.id,
                 name: user.name,
                 avatar: user.avatarUrl,
-                lastMessage: '' // Can be updated if backend provides last message
-              });
-
-              // Once all existing contacts are loaded, handle potential auto-selection
-              if (contacts.length === userIds.length) {
-                this.chatContacts.set(contacts);
-                this.handleIncomingRecipient();
-              }
+                lastMessage: ''
+              };
+              this.addContactToList(contact);
             }
           });
         });
-      }
+      },
+      error: (err) => console.error('Failed to load chat history IDs', err)
     });
   }
 
-  /**
-   * Handles the logic for when a user clicks "Contact User" from Request Details.
-   * It checks the 'recipientId' query parameter and selects that user.
-   */
   private handleIncomingRecipient() {
     this.route.queryParams.subscribe(params => {
       const recipientId = params['recipientId'];
       if (recipientId) {
         const id = parseInt(recipientId);
-        const existing = this.chatContacts().find(c => c.id === id);
 
+        // Check if already in list (might have loaded from history)
+        const existing = this.chatContacts().find(c => c.id === id);
         if (existing) {
           this.selectUser(existing);
-        } else {
-          // If the user isn't in recent contacts, fetch details and add them to the list
-          this.apiService.getUserById(id).subscribe(user => {
+          return;
+        }
+
+        // Fetch explicitly
+        this.apiService.getUserById(id).subscribe({
+          next: (user) => {
             const newContact = {
               id: user.id,
               name: user.name,
               avatar: user.avatarUrl,
-              lastMessage: 'Starting new conversation...'
+              lastMessage: 'New Chat'
             };
-            this.chatContacts.update(list => [newContact, ...list]);
+            this.addContactToList(newContact);
             this.selectUser(newContact);
-          });
-        }
+          },
+          error: (err) => console.error('Could not load recipient', err)
+        });
       }
     });
   }
 
+  // Helper to add contacts safely without duplicates
+  private addContactToList(contact: any) {
+    this.chatContacts.update(currentList => {
+      // If already exists, don't add again
+      if (currentList.find(c => c.id === contact.id)) {
+        return currentList;
+      }
+      return [...currentList, contact];
+    });
+  }
+
   selectUser(contact: any) {
+    if (this.selectedUser()?.id === contact.id) return;
+
     this.selectedUser.set(contact);
     this.isTyping.set(false);
     this.loadConversation();
+
     this.chatService.subscribeToMessages(this.currentUserId()!);
     this.chatService.subscribeToTypingIndicator(this.currentUserId()!);
   }
@@ -163,12 +172,20 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.getConversation(userId, otherUserId).subscribe({
       next: (messages) => {
-        this.conversationMessages.set(messages);
-        messages.forEach(msg => {
+        const safeMessages = messages.map(msg => ({
+          ...msg,
+          senderId: Number(msg.senderId),
+          recipientId: Number(msg.recipientId)
+        }));
+
+        this.conversationMessages.set(safeMessages);
+
+        safeMessages.forEach(msg => {
           if (!msg.isRead && msg.recipientId === userId) {
             this.chatService.markAsRead(msg.id).subscribe();
           }
         });
+
         this.scrollToBottom();
       }
     });
@@ -179,20 +196,39 @@ export class ChatComponent implements OnInit, OnDestroy {
     const otherUserId = this.selectedUser()?.id;
     if (!userId || !otherUserId || !this.messageInput.trim()) return;
 
+    const content = this.messageInput;
+    this.messageInput = '';
     this.isSending.set(true);
+
+    const tempMessage: ChatMessageDTO = {
+      id: Date.now(),
+      senderId: userId,
+      senderName: 'Me',
+      recipientId: otherUserId,
+      recipientName: this.selectedUser().name,
+      content: content,
+      isRead: false,
+      isDeleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    this.conversationMessages.update(msgs => [...msgs, tempMessage]);
+    this.scrollToBottom();
+
     if (this.wsConnected()) {
-      this.chatService.sendMessageViaWebSocket(userId, otherUserId, this.messageInput);
+      this.chatService.sendMessageViaWebSocket(userId, otherUserId, content);
+      this.isSending.set(false);
     } else {
-      this.chatService.sendMessage(userId, otherUserId, this.messageInput).subscribe(msg => {
-        this.conversationMessages.update(msgs => [...msgs, msg]);
-        this.scrollToBottom();
+      this.chatService.sendMessage(userId, otherUserId, content).subscribe({
+        next: () => this.isSending.set(false),
+        error: () => {
+          this.isSending.set(false);
+          this.messageInput = content;
+          alert('Message failed to send');
+        }
       });
     }
-
-    this.chatService.sendTypingIndicator(userId, otherUserId, false);
-    this.messageInput = '';
-    this.isSending.set(false);
-    this.scrollToBottom();
   }
 
   onMessageInputChange() {
@@ -215,9 +251,17 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   private handleReceivedMessage(message: ChatMessageDTO) {
     const otherUserId = this.selectedUser()?.id;
-    if (message.senderId === otherUserId || message.recipientId === otherUserId) {
-      this.conversationMessages.update(msgs => [...msgs, message]);
-      if (message.recipientId === this.currentUserId()) {
+    const currentUserId = this.currentUserId();
+    const msgSenderId = Number(message.senderId);
+    const msgRecipientId = Number(message.recipientId);
+
+    if (msgSenderId === currentUserId) return;
+
+    if (msgSenderId === otherUserId || msgRecipientId === otherUserId) {
+      const safeMessage = { ...message, senderId: msgSenderId, recipientId: msgRecipientId };
+      this.conversationMessages.update(msgs => [...msgs, safeMessage]);
+
+      if (msgRecipientId === currentUserId) {
         this.chatService.markAsRead(message.id).subscribe();
       }
       this.scrollToBottom();
@@ -237,6 +281,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    window.history.back(); // Changed to go back to the specific request if coming from there
+    window.history.back();
   }
 }
