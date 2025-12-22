@@ -75,30 +75,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     // Wait for contacts to load before handling the incoming recipient
     setTimeout(() => {
       this.handleIncomingRecipient();
-      this.addDummyData(); // Add dummy data for demonstration
     }, 500);
   }
 
-  private addDummyData() {
-    if (this.chatContacts().length === 0) {
-      const dummyContacts = [
-        { id: 101, name: 'Dexter Morgan', avatar: 'https://i.pravatar.cc/150?img=12', lastMessage: 'Thanks for the recommendation!', lastMessageTime: new Date(Date.now() - 3600000).toISOString() },
-        { id: 102, name: 'Jesse Pinkman', avatar: 'https://i.pravatar.cc/150?img=33', lastMessage: 'Yo, that was really helpful!', lastMessageTime: new Date(Date.now() - 7200000).toISOString() },
-        { id: 103, name: 'Elliot Alderson', avatar: 'https://i.pravatar.cc/150?img=57', lastMessage: 'I will check the security protocols.', lastMessageTime: new Date(Date.now() - 86400000).toISOString() }
-      ];
-      this.chatContacts.set(dummyContacts);
-
-      // Select the first dummy user and add some messages
-      this.selectedUser.set(dummyContacts[0]);
-      const dummyMessages: ChatMessageDTO[] = [
-        { id: 1, senderId: 101, senderName: 'Dexter Morgan', recipientId: this.currentUserId()!, recipientName: 'Me', content: 'Hi, I saw your profile. Are you available for the therapy sessions?', isRead: true, isDeleted: false, createdAt: new Date(Date.now() - 4000000).toISOString(), updatedAt: new Date(Date.now() - 4000000).toISOString() },
-        { id: 2, senderId: this.currentUserId()!, senderName: 'Me', recipientId: 101, recipientName: 'Dexter Morgan', content: 'Yes, I have availability in the evenings. What time works best for you?', isRead: true, isDeleted: false, createdAt: new Date(Date.now() - 3800000).toISOString(), updatedAt: new Date(Date.now() - 3800000).toISOString() },
-        { id: 3, senderId: 101, senderName: 'Dexter Morgan', recipientId: this.currentUserId()!, recipientName: 'Me', content: 'Thanks for the recommendation!', isRead: true, isDeleted: false, createdAt: new Date(Date.now() - 3600000).toISOString(), updatedAt: new Date(Date.now() - 3600000).toISOString() }
-      ];
-      this.conversationMessages.set(dummyMessages);
-      this.scrollToBottom();
-    }
-  }
+  // Removed fake dummy data - chat now only shows real users from the database
 
   ngOnDestroy() {
     this.chatService.disconnect();

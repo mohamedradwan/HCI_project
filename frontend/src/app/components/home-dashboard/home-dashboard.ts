@@ -183,10 +183,7 @@ export class HomeDashboardComponent implements OnInit {
         queryParams: { recipientId: recipientId }
       });
     } else {
-      // For mock data without userId, we use a fixed ID for demo purposes
-      this.router.navigate(['/chat'], {
-        queryParams: { recipientId: 101 }
-      });
+      console.warn('Cannot start chat: request has no userId');
     }
   }
 
