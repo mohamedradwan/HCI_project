@@ -50,6 +50,11 @@ import { NotificationCenterComponent } from '../notification-center/notification
               (clicked)="navigate('create')">
               <span class="mr-2">➕</span> Create
             </app-button>
+            <app-button
+              [variant]="currentScreen() === 'chat' ? 'secondary' : 'ghost'"
+              (clicked)="navigate('chat')">
+              <span class="mr-2">💬</span> Messages
+            </app-button>
           </div>
 
           <!-- Right Section -->
@@ -150,6 +155,12 @@ import { NotificationCenterComponent } from '../notification-center/notification
                        hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
                 <span class="text-xl">➕</span>
                 <span class="font-medium">Create</span>
+              </button>
+              <button (click)="navigate('chat'); mobileMenuOpen=false"
+                class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors
+                       hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-700 dark:text-slate-200">
+                <span class="text-xl">💬</span>
+                <span class="font-medium">Messages</span>
               </button>
               <button (click)="navigate('profile'); mobileMenuOpen=false"
                 class="w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 transition-colors

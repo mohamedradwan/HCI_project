@@ -1,0 +1,22 @@
+.chat-container {
+    height: 100vh;
+    max-height: 100vh;
+}
+
+/* Smooth transitions for chat interactions */
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-8px);
+    }
+}
