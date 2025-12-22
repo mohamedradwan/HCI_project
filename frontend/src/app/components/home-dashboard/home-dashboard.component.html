@@ -182,7 +182,12 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <app-button>View Details →</app-button>
+                  <app-button (click)="viewRequestDetails(request.id!)">View Details →</app-button>
+                  <button (click)="startChat(request, $event)"
+                    class="px-3 py-2 rounded-lg border border-slate-200 dark:border-dark-600 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all font-medium flex items-center gap-2"
+                    title="Message User">
+                    💬 Chat
+                  </button>
                   <button (click)="shareRequest(request.id!, $event)"
                     class="px-3 py-2 rounded-lg border border-slate-200 dark:border-dark-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-700 transition-all"
                     title="Copy link">

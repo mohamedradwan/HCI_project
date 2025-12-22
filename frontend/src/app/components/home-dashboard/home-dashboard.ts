@@ -300,6 +300,29 @@ export class HomeDashboardComponent implements OnInit {
     this.router.navigate([`/${screen}`]);
   }
 
+  startChat(request: any, event: Event): void {
+    event.stopPropagation();
+    const currentUserId = this.authService.getCurrentUserId();
+    if (!currentUserId) {
+      this.router.navigate(['/auth']);
+      return;
+    }
+
+    // For offerings, the recipient is the person who posted it (userId)
+    // For requests, the recipient is also the person who posted it (userId)
+    const recipientId = request.userId;
+    if (recipientId) {
+      this.router.navigate(['/chat'], {
+        queryParams: { recipientId: recipientId }
+      });
+    } else {
+      // For mock data without userId, we use a fixed ID for demo purposes
+      this.router.navigate(['/chat'], {
+        queryParams: { recipientId: 101 }
+      });
+    }
+  }
+
   viewRequestDetails(requestId: number): void {
     this.router.navigate(['/details'], { queryParams: { id: requestId } });
   }
