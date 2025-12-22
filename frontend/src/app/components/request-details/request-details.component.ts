@@ -58,20 +58,7 @@ export class RequestDetailsComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set('');
 
-    // If it's a mock ID (100-299), load mock data directly
-    if (id >= 100 && id < 300) {
-      setTimeout(() => {
-        const mockData = this.getMockRequest(id);
-        if (mockData) {
-          this.request.set(mockData);
-        } else {
-          this.error.set('Mock request not found');
-        }
-        this.isLoading.set(false);
-      }, 500);
-      return;
-    }
-
+    // Load request from database only
     this.apiService.getRequestById(id).subscribe({
       next: (data) => {
         this.request.set(data);
@@ -79,95 +66,10 @@ export class RequestDetailsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading request:', err);
-        // Fallback to mock data if API fails (even for non-mock IDs for demo purposes)
-        const mockData = this.getMockRequest(id);
-        if (mockData) {
-          console.log('Falling back to mock data for ID:', id);
-          this.request.set(mockData);
-          this.isLoading.set(false);
-        } else {
-          this.error.set('Failed to load request details');
-          this.isLoading.set(false);
-        }
+        this.error.set('Failed to load request details');
+        this.isLoading.set(false);
       }
     });
-  }
-
-  private getMockRequest(id: number): ServiceRequestDTO | null {
-    const mockRequests: ServiceRequestDTO[] = [
-      {
-        id: 101,
-        title: 'Help moving furniture',
-        category: 'Transportation',
-        description: 'Need help moving a sofa and a bed to my new apartment. 4th floor, no elevator. The items are heavy but can be handled by two people. I will be there to assist.',
-        budget: '$80',
-        location: 'Downtown Cairo',
-        date: '2025-12-23',
-        time: '14:00',
-        userName: 'Mona Ahmed',
-        userAvatar: 'https://i.pravatar.cc/150?u=101',
-        userRating: 4.8,
-        urgent: true,
-        latitude: 30.0449,
-        longitude: 31.2358,
-        status: 'OPEN',
-        userId: 101 // Using ID 101 for mock user
-      },
-      {
-        id: 102,
-        title: 'Math Tutor for Calculus',
-        category: 'Tutoring',
-        description: 'Looking for an experienced tutor for university level calculus. Need help with derivatives and integrals. Prefer someone who can explain complex concepts simply.',
-        budget: '$30/hr',
-        location: 'Maadi',
-        date: '2025-12-22',
-        time: '18:00',
-        userName: 'Sherif Zeyad',
-        userAvatar: 'https://i.pravatar.cc/150?u=102',
-        userRating: 4.5,
-        urgent: false,
-        latitude: 29.9602,
-        longitude: 31.2569,
-        status: 'OPEN',
-        userId: 102
-      },
-      {
-        id: 103,
-        title: 'Leaking Faucet in Kitchen',
-        category: 'Home Repairs',
-        description: 'My kitchen faucet is leaking constantly. Need someone to come and fix it or replace the washer. It is a standard dual-handle faucet.',
-        budget: '$40',
-        location: 'Zamalek',
-        date: '2025-12-21',
-        time: '15:30',
-        userName: 'Layla Mahmoud',
-        userAvatar: 'https://i.pravatar.cc/150?u=103',
-        userRating: 4.9,
-        urgent: false,
-        latitude: 30.0631,
-        longitude: 31.2211,
-        status: 'OPEN',
-        userId: 103
-      },
-      {
-         id: 201, // Mock Offering
-         title: 'Professional Graphic Design',
-         category: 'Other Services',
-         description: 'I am a freelance graphic designer with 5 years of experience. I can design logos, branding materials, social media graphics, and more. Fast turnaround and high quality guaranteed.',
-         budget: '$25/hr',
-         location: 'Remote / Cairo',
-         date: 'Anytime',
-         time: 'Flexible',
-         userName: 'Yasmine Hassan',
-         userAvatar: 'https://i.pravatar.cc/150?u=201',
-         userRating: 4.9,
-         urgent: false,
-         status: 'OPEN',
-         userId: 201
-      }
-    ];
-
-    return mockRequests.find(r => r.id === id) || mockRequests[0];
   }
 
   acceptRequest() {
@@ -195,6 +97,15 @@ export class RequestDetailsComponent implements OnInit {
         this.isAccepting.set(false);
       }
     });
+  }
+
+  // Helper to extract numeric amount from budget string (e.g., "$100/session" -> 100)
+  getBudgetAmount(): number {
+    const budget = this.request()?.budget || '0';
+    // Remove $ and any text after the number (like /hr, /session, etc.)
+    const numericString = budget.replace(/[^0-9.]/g, '');
+    const amount = parseFloat(numericString);
+    return isNaN(amount) ? 10 : amount; // Default to 10 if parsing fails
   }
 
   isCompleting = signal(false);

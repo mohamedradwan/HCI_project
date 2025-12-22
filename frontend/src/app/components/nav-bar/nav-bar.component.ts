@@ -32,9 +32,7 @@ import { NotificationCenterComponent } from '../notification-center/notification
 
           <!-- Logo -->
           <div class="flex items-center gap-3 cursor-pointer group" (click)="navigate('home')">
-            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all group-hover:scale-105">
-              <span class="text-white font-bold text-lg">5</span>
-            </div>
+            <img src="logo.png" alt="5alasly" class="w-10 h-10 rounded-xl shadow-lg group-hover:shadow-xl transition-all group-hover:scale-105" />
             <span class="text-slate-900 dark:text-white text-xl font-semibold hidden sm:block">5alasly</span>
           </div>
 
@@ -136,9 +134,7 @@ import { NotificationCenterComponent } from '../notification-center/notification
           <div class="p-6">
             <!-- Header -->
             <div class="flex items-center gap-3 mb-8">
-              <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span class="text-white font-bold text-xl">5</span>
-              </div>
+              <img src="logo.png" alt="5alasly" class="w-12 h-12 rounded-xl shadow-lg" />
               <span class="text-slate-900 dark:text-white text-2xl font-semibold">5alasly</span>
             </div>
 

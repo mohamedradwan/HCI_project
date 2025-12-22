@@ -195,7 +195,7 @@
                     </button>
                     } @else {
                     <div class="space-y-3">
-                        <app-paypal-button [amount]="+(request()?.budget || 0)"
+                        <app-paypal-button [amount]="getBudgetAmount()"
                             [description]="'Payment for: ' + request()?.title"
                             (paymentSuccess)="onPaymentSuccess($event)" (paymentError)="onPaymentError($event)"
                             (paymentCancelled)="onPaymentCancelled()" />
